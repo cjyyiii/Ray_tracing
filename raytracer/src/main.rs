@@ -6,8 +6,8 @@ use crate::vec3::Color;
 use color::write_color;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
-use ray::Ray;
-use std::fs::File;
+pub use ray::Ray;
+use std::{fs::File, mem::discriminant};
 pub use vec3::Vec3;
 
 use crate::vec3::Point3;
@@ -61,11 +61,6 @@ fn main() {
                 (ray_color(r).y() as f32 * 255.).floor() as u8,
                 (ray_color(r).z() as f32 * 255.).floor() as u8,
             ];
-            // let pixel_color = [
-            //     (j as f32 / height as f32 * 255.).floor() as u8,
-            //     ((i + height - j) as f32 / (height + width) as f32 * 255.).floor() as u8,
-            //     (i as f32 / height as f32 * 255.).floor() as u8,
-            // ];
             write_color(pixel_color, &mut img, i, height - j - 1);
             bar.inc(1);
         }
@@ -85,8 +80,36 @@ fn main() {
 }
 
 fn ray_color(r: Ray) -> Color {
+    // if hit_sphere(Vec3::new(0.0, 0.0, -1.0), 0.5, r) {
+    //     //1
+    //     let ret: Color = Color::new(1.0, 0.0, 0.0);
+    //     return ret;
+    // }
+    //2
+    let t: f64 = hit_sphere(Vec3::new(0.0, 0.0, -1.0), 0.5, r);
+    if t > 0.0 {
+        let N: Vec3 = Vec3::unit_vector(Ray::at(&r, t) - Vec3::new(0.0, 0.0, -1.0));
+        return 0.5 * Color::new(N.x() + 1.0, N.y() + 1.0, N.z() + 1.0);
+    }
     let unit_direction: Vec3 = Vec3::unit_vector(r.dir);
-    let t: f64 = 0.5 * (unit_direction.y() + 1.0);
+    // let t: f64 = 0.5 * (unit_direction.y() + 1.0);
+    let t = 0.5 * (unit_direction.y() + 1.0);
     let ray_col: Color = Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t;
     ray_col
+}
+
+fn hit_sphere(center: Point3, radius: f64, r: Ray) -> f64 {
+    let oc: Vec3 = r.orig - center;
+    let a: f64 = Vec3::dot(r.dir, r.dir);
+    let b: f64 = 2.0 * Vec3::dot(oc, r.dir);
+    let c: f64 = Vec3::dot(oc, oc) - radius * radius;
+    let discriminant: f64 = b * b - 4.0 * a * c;
+    // let flag: bool = discriminant > 0.0;/1
+    // flag/1
+    // 2
+    if discriminant < 0.0 {
+        return -1.0;
+    } else {
+        return (-b - discriminant.sqrt()) / (2.0 * a);
+    }
 }

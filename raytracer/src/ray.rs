@@ -19,7 +19,7 @@ impl Ray {
         Self { orig, dir }
     }
 
-    // pub fn at(&self, t: f64) -> Vec3 {
-    //     self.orig + self.dir * t
-    // }
+    pub fn at(&self, t: f64) -> Vec3 {
+        self.orig + self.dir * t
+    }
 }
