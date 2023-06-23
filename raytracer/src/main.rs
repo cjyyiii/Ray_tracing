@@ -1,8 +1,8 @@
 mod color;
-pub mod ray;
+mod ray;
 mod vec3;
 
-use self::ray::Ray;
+use ray::Ray;
 use crate::vec3::Color;
 use color::write_color;
 use image::{ImageBuffer, RgbImage};
