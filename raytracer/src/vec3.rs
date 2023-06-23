@@ -57,17 +57,6 @@ impl Vec3 {
         }
     }
 
-    // fn to_u8(&self) -> (u8, u8, u8) {
-    //     let x: u8 = (self.x * 255.) as u8;
-    //     let y: u8 = (self.y * 255.) as u8;
-    //     let z: u8 = (self.z * 255.) as u8;
-    //     (x, y, z)
-    // }
-
-    // pub fn get_color(&self) -> [u8; 3] {
-    //     let xyz: (u8, u8, u8) = self.to_u8();
-    //     [xyz.0, xyz.1, xyz.2]
-    // }
 }
 
 impl Neg for Vec3 {
