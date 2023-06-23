@@ -56,7 +56,6 @@ impl Vec3 {
             z: u.x * v.y - u.y * v.x,
         }
     }
-
 }
 
 impl Neg for Vec3 {
