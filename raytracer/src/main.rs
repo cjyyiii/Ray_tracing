@@ -87,5 +87,6 @@ fn main() {
 fn ray_color(r: Ray) -> Color {
     let unit_direction: Vec3 = Vec3::unit_vector(r.dir);
     let t: f64 = 0.5 * (unit_direction.y() + 1.0);
-    return Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t;
+    let ray_col: Color = Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t;
+    ray_col
 }
