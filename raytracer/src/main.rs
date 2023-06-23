@@ -7,7 +7,7 @@ use color::write_color;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 pub use ray::Ray;
-use std::{fs::File, mem::discriminant};
+use std::fs::File;
 pub use vec3::Vec3;
 
 use crate::vec3::Point3;
@@ -104,7 +104,7 @@ fn hit_sphere(center: Point3, radius: f64, r: Ray) -> bool {
     let c: f64 = Vec3::dot(oc, oc) - radius * radius;
     let discriminant: f64 = b * b - 4.0 * a * c;
     let flag: bool = discriminant > 0.0;
-    return flag;
+    flag
     // 2
     // if discriminant < 0.0 {
     //     return -1.0;
