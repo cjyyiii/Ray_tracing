@@ -1,5 +1,5 @@
 mod color;
-mod ray;
+pub mod ray;
 mod vec3;
 
 use self::ray::Ray;
