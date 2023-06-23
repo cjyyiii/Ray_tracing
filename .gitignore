@@ -2,4 +2,3 @@
 /output/*
 /.vscode
 !.gitkeep
-raytracer/src/ray.rs
