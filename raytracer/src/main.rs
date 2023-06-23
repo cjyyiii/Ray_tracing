@@ -1,12 +1,12 @@
 mod color;
-mod vec3;
 mod ray;
+mod vec3;
 
+use self::ray::Ray;
+use crate::vec3::Color;
 use color::write_color;
-use ray::Ray;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
-use crate::vec3::Color;
 use std::fs::File;
 pub use vec3::Vec3;
 
@@ -35,11 +35,12 @@ fn main() {
     let viewport_height: f64 = 2.0;
     let viewport_width: f64 = 1.0 * viewport_height;
     let focal_length: f64 = 1.0;
-    
-    let origin: Vec3 =Point3::new(0.0, 0.0, 0.0);
+
+    let origin: Vec3 = Point3::new(0.0, 0.0, 0.0);
     let horizontal: Vec3 = Vec3::new(viewport_width, 0.0, 0.0);
     let vertical: Vec3 = Vec3::new(0.0, viewport_height, 0.0);
-    let lower_left_corner: Vec3 = origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
+    let lower_left_corner: Vec3 =
+        origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
     // Progress bar UI powered by library `indicatif`
     // You can use indicatif::ProgressStyle to make it more beautiful
     // You can also use indicatif::MultiProgress in multi-threading to show progress of each thread
