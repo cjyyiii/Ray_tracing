@@ -1,6 +1,12 @@
+use std::ops::{Neg};
 use std::ops::{Add, AddAssign};
+use std::ops::{Sub, SubAssign};
+use std::ops::{Mul, MulAssign};
+use std::ops::{Div, DivAssign};
 
-#[derive(Clone, Debug, PartialEq)]
+
+
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub struct Vec3 {
     x: f64,
     y: f64,
@@ -31,6 +37,51 @@ impl Vec3 {
 
     pub fn squared_length(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
+    }
+
+    pub fn length(&self) -> f64 {
+        self.squared_length().sqrt()
+    }
+
+    pub fn unit_vector(v: Self) -> Self {
+        v / v.length()
+    }
+
+    pub fn dot(u: Vec3, v: Vec3) -> f64 {
+        u.x * v.x + u.y * v.y + u.z * v.z
+    }
+
+    pub fn cross(u: Vec3, v: Vec3) -> Self {
+        Self {
+            x: u.y * v.z - u.z * v.y,
+            y: u.z * v.x - u.x * v.z,
+            z: u.x * v.y - u.y * v.x,
+        }
+    }
+
+    fn to_u8(&self) -> (u8, u8, u8) {
+        let x: u8 = (self.x *255.) as u8;
+        let y: u8 = (self.y *255.) as u8;
+        let z: u8 = (self.z *255.) as u8;
+        (x, y, z)
+    }
+
+    pub fn get_color(&self) -> [u8; 3] {
+        let xyz:(u8, u8, u8) = self.to_u8();
+        [xyz.0, xyz.1, xyz.2]
+    }
+
+}
+
+impl Neg for Vec3 {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
     }
 }
 
@@ -67,6 +118,132 @@ impl AddAssign for Vec3 {
         };
     }
 }
+
+impl AddAssign<f64> for Vec3 {
+    fn add_assign(&mut self, other: f64) {
+        *self = Self {
+            x: self.x + other,
+            y: self.y + other,
+            z: self.z + other,
+        };
+    }
+}
+
+impl Sub for Vec3 {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self {
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        }
+    }
+}
+
+impl Sub<f64> for Vec3 {
+    type Output = Self;
+
+    fn sub(self, other: f64) -> Self {
+        Self {
+            x: self.x - other,
+            y: self.y - other,
+            z: self.z - other,
+        }
+    }
+}
+
+impl SubAssign for Vec3 {
+    fn sub_assign(&mut self, other: Self) {
+        *self = Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        };
+    }
+}
+
+impl SubAssign<f64> for Vec3 {
+    fn sub_assign(&mut self, other: f64) {
+        *self = Self {
+            x: self.x - other,
+            y: self.y - other,
+            z: self.z - other,
+        };
+    }
+}
+
+impl Mul for Vec3 {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        Self {
+            x: self.x * other.x,
+            y: self.y * other.y,
+            z: self.z * other.z,
+        }
+    }
+}
+
+impl Mul<f64> for Vec3 {
+    type Output = Self;
+
+    fn mul(self, other: f64) -> Self {
+        Self {
+            x: self.x * other,
+            y: self.y * other,
+            z: self.z * other,
+        }
+    }
+}
+
+impl Mul<Vec3> for f64 {
+    type Output = Vec3;
+
+    fn mul(self, other: Vec3) -> Vec3 {
+        Vec3 {
+            x: self * other.x,
+            y: self * other.y,
+            z: self * other.z,
+        }
+    }
+}
+
+impl MulAssign<f64> for Vec3 {
+    fn mul_assign(&mut self, other: f64) {
+        *self = Self {
+            x: self.x * other,
+            y: self.y * other,
+            z: self.z * other,
+        };
+    }
+}
+
+impl Div<f64> for Vec3 {
+    type Output = Self;
+
+    fn div(self, other: f64) -> Self {
+        Self {
+            x: self.x / other,
+            y: self.y / other,
+            z: self.z / other,
+        }
+    }
+}
+
+impl DivAssign<f64> for Vec3 {
+    fn div_assign(&mut self, other: f64) {
+        *self = Self {
+            x: self.x / other,
+            y: self.y / other,
+            z: self.z / other,
+        };
+    }
+}
+
+pub type  Color = Vec3;
+
+pub type Point3 = Vec3;
 
 #[cfg(test)]
 mod tests {
