@@ -2,11 +2,11 @@ mod color;
 mod ray;
 mod vec3;
 
-use ray::Ray;
 use crate::vec3::Color;
 use color::write_color;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
+use ray::Ray;
 use std::fs::File;
 pub use vec3::Vec3;
 
