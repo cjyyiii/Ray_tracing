@@ -71,6 +71,11 @@ impl Vec3 {
             return p;
         }
     }
+
+    pub fn random_unit_vector() -> Self {
+        let r: Vec3 = Vec3::random_in_unit_sphere();
+        Vec3::unit_vector(r)
+    }
 }
 
 impl Neg for Vec3 {
