@@ -13,6 +13,10 @@ impl HittableList {
         }
     }
 
+    // pub fn clear(&mut self) {
+    //     self.hittable_list.clear();
+    // }
+
     pub fn add(&mut self, object: Box<dyn Hittable>) {
         self.hittable_list.push(object);
     }

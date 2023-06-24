@@ -1,17 +1,21 @@
+mod camera;
 mod color;
 mod hittable;
 mod hittable_list;
 mod ray;
+mod rtweekend;
 mod sphere;
 mod vec3;
 
 use crate::vec3::Color;
-use crate::vec3::Point3;
+// use crate::vec3::Point3;
+use camera::Camera;
 use color::write_color;
 use hittable::Hittable;
 use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
+use rand::Rng;
 pub use ray::Ray;
 use sphere::Sphere;
 use std::fs::File;
@@ -33,7 +37,7 @@ fn main() {
     let height: usize = 800;
     let path: &str = "output/test.jpg";
     let quality: u8 = 60; // From 0 to 100, suggested value: 60
-
+    let samples_per_pixel: u64 = 100;
     // Create image data
     let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
 
@@ -47,15 +51,8 @@ fn main() {
         Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)),
     );
 
-    let viewport_height: f64 = 2.0;
-    let viewport_width: f64 = 1.0 * viewport_height;
-    let focal_length: f64 = 1.0;
+    let cam: Camera = Camera::new();
 
-    let origin: Vec3 = Point3::new(0.0, 0.0, 0.0);
-    let horizontal: Vec3 = Vec3::new(viewport_width, 0.0, 0.0);
-    let vertical: Vec3 = Vec3::new(0.0, viewport_height, 0.0);
-    let lower_left_corner: Vec3 =
-        origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
     // Progress bar UI powered by library `indicatif`
     // You can use indicatif::ProgressStyle to make it more beautiful
     // You can also use indicatif::MultiProgress in multi-threading to show progress of each thread
@@ -65,16 +62,22 @@ fn main() {
         ProgressBar::new((height * width) as u64)
     };
 
+    let mut rng = rand::thread_rng();
     for j in 0..height {
         for i in 0..width {
-            let u: f64 = i as f64 / (width - 1) as f64;
-            let v: f64 = j as f64 / (height - 1) as f64;
-            let direction: Vec3 = lower_left_corner + u * horizontal + v * vertical - origin;
-            let r: Ray = Ray::new(origin, direction);
+            let mut pixel_c: Color = Color::new(255.0, 0.0, 0.0);
+            for _ in 0..samples_per_pixel {
+                let u_rand: f64 = rng.gen();
+                let v_rand: f64 = rng.gen();
+                let u: f64 = (i as f64 + u_rand) / (width as f64 - 1.0);
+                let v: f64 = (j as f64 + v_rand) / (height as f64 - 1.0);
+                let r: Ray = cam.get_ray(u, v);
+                pixel_c += ray_color(r, &world);
+            }
             let pixel_color: [u8; 3] = [
-                (ray_color(r, &world).x() as f32 * 255.).floor() as u8,
-                (ray_color(r, &world).y() as f32 * 255.).floor() as u8,
-                (ray_color(r, &world).z() as f32 * 255.).floor() as u8,
+                (clamp(pixel_c.x() * 0.01, 0.0, 0.999) * 255.).floor() as u8,
+                (clamp(pixel_c.y() * 0.01, 0.0, 0.999) * 255.).floor() as u8,
+                (clamp(pixel_c.z() * 0.01, 0.0, 0.999) * 255.).floor() as u8,
             ];
             write_color(pixel_color, &mut img, i, height - j - 1);
             bar.inc(1);
@@ -105,15 +108,12 @@ fn ray_color(r: Ray, world: &dyn Hittable) -> Color {
     ray_col
 }
 
-// fn hit_sphere(center: Point3, radius: f64, r: Ray) -> f64 {
-//     let oc: Vec3 = r.orig - center;
-//     let a: f64 = r.dir.squared_length();
-//     let half_b: f64 = Vec3::dot(oc, r.dir);
-//     let c: f64 = oc.squared_length() - radius * radius;
-//     let discriminant: f64 = half_b * half_b - a * c;
-//     if discriminant < 0.0 {
-//         -1.0
-//     } else {
-//         (-half_b - discriminant.sqrt()) / a
-//     }
-// }
+fn clamp(x: f64, min: f64, max: f64) -> f64 {
+    if x < min {
+        return min;
+    }
+    if x > max {
+        return max;
+    }
+    x
+}
