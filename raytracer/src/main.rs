@@ -1,16 +1,22 @@
 mod color;
+mod hittable;
+mod hittable_list;
 mod ray;
+mod sphere;
 mod vec3;
 
 use crate::vec3::Color;
+use crate::vec3::Point3;
 use color::write_color;
+use hittable::HitRecord;
+use hittable::Hittable;
+use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 pub use ray::Ray;
+use sphere::Sphere;
 use std::fs::File;
 pub use vec3::Vec3;
-
-use crate::vec3::Point3;
 
 const AUTHOR: &str = "程婧祎";
 
@@ -31,6 +37,16 @@ fn main() {
 
     // Create image data
     let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
+
+    let mut world: HittableList = HittableList::new();
+    HittableList::add(
+        &mut world,
+        Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)),
+    );
+    HittableList::add(
+        &mut world,
+        Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)),
+    );
 
     let viewport_height: f64 = 2.0;
     let viewport_width: f64 = 1.0 * viewport_height;
@@ -57,9 +73,9 @@ fn main() {
             let direction: Vec3 = lower_left_corner + u * horizontal + v * vertical - origin;
             let r: Ray = Ray::new(origin, direction);
             let pixel_color: [u8; 3] = [
-                (ray_color(r).x() as f32 * 255.).floor() as u8,
-                (ray_color(r).y() as f32 * 255.).floor() as u8,
-                (ray_color(r).z() as f32 * 255.).floor() as u8,
+                (ray_color(r, &world).x() as f32 * 255.).floor() as u8,
+                (ray_color(r, &world).y() as f32 * 255.).floor() as u8,
+                (ray_color(r, &world).z() as f32 * 255.).floor() as u8,
             ];
             write_color(pixel_color, &mut img, i, height - j - 1);
             bar.inc(1);
@@ -79,27 +95,26 @@ fn main() {
     }
 }
 
-fn ray_color(r: Ray) -> Color {
-    let t: f64 = hit_sphere(Vec3::new(0.0, 0.0, -1.0), 0.5, r);
-    if t > 0.0 {
-        let n: Vec3 = Vec3::unit_vector(Ray::at(&r, t) - Vec3::new(0.0, 0.0, -1.0));
-        return 0.5 * Color::new(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0);
+fn ray_color(r: Ray, world: &dyn Hittable) -> Color {
+    if let Some(hit_rec) = world.hit(&r, 0.0, f64::INFINITY) {
+        return 0.5 * (hit_rec.normal + Color::new(1.0, 1.0, 1.0));
     }
+
     let unit_direction: Vec3 = Vec3::unit_vector(r.dir);
-    let t = 0.5 * (unit_direction.y() + 1.0);
+    let t: f64 = 0.5 * (unit_direction.y() + 1.0);
     let ray_col: Color = Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t;
     ray_col
 }
 
-fn hit_sphere(center: Point3, radius: f64, r: Ray) -> f64 {
-    let oc: Vec3 = r.orig - center;
-    let a: f64 = Vec3::dot(r.dir, r.dir);
-    let b: f64 = 2.0 * Vec3::dot(oc, r.dir);
-    let c: f64 = Vec3::dot(oc, oc) - radius * radius;
-    let discriminant: f64 = b * b - 4.0 * a * c;
-    if discriminant < 0.0 {
-        -1.0
-    } else {
-        (-b - discriminant.sqrt()) / (2.0 * a)
-    }
-}
+// fn hit_sphere(center: Point3, radius: f64, r: Ray) -> f64 {
+//     let oc: Vec3 = r.orig - center;
+//     let a: f64 = r.dir.squared_length();
+//     let half_b: f64 = Vec3::dot(oc, r.dir);
+//     let c: f64 = oc.squared_length() - radius * radius;
+//     let discriminant: f64 = half_b * half_b - a * c;
+//     if discriminant < 0.0 {
+//         -1.0
+//     } else {
+//         (-half_b - discriminant.sqrt()) / a
+//     }
+// }
