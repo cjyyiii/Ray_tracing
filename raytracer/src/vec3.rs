@@ -76,6 +76,15 @@ impl Vec3 {
         let r: Vec3 = Vec3::random_in_unit_sphere();
         Vec3::unit_vector(r)
     }
+
+    pub fn random_in_hemisphere(normal: &Vec3) -> Self {
+        let in_unit_sphere: Vec3 = Vec3::random_in_unit_sphere();
+        if Vec3::dot(in_unit_sphere, *normal) > 0.0 {
+            in_unit_sphere
+        } else {
+            -in_unit_sphere
+        }
+    }
 }
 
 impl Neg for Vec3 {
