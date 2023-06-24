@@ -2,5 +2,4 @@
 /output/*
 /.vscode
 !.gitkeep
-raytracer/src/ray.rs
-raytracer/src/hittable_list.rs
+
