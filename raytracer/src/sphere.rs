@@ -38,9 +38,9 @@ impl Hittable for Sphere {
 
         let t: f64 = root;
         let p: Vec3 = r.at(t);
-        let normal: Vec3 = (p - self.center) / self.radius;
+        let outward_normal: Vec3 = (p - self.center) / self.radius;
 
-        let hit_rec: HitRecord = HitRecord::new(p, t, normal, *r);
+        let hit_rec: HitRecord = HitRecord::new(p, t, outward_normal, *r);
         Some(hit_rec)
     }
 }

@@ -1,4 +1,3 @@
-// src/hittable.rs
 use crate::ray::Ray;
 use crate::vec3::Point3;
 use crate::vec3::Vec3;
@@ -14,7 +13,7 @@ pub struct HitRecord {
 impl HitRecord {
     pub fn new(p: Point3, t: f64, outward_normal: Vec3, r: Ray) -> Self {
         let front_face: bool = Vec3::dot(r.dir, outward_normal) < 0.0;
-        let normal = if front_face {
+        let normal: Vec3 = if front_face {
             outward_normal
         } else {
             -outward_normal
