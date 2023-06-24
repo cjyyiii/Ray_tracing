@@ -17,6 +17,7 @@ use rand::Rng;
 pub use ray::Ray;
 use sphere::Sphere;
 use std::fs::File;
+use vec3::Point3;
 pub use vec3::Vec3;
 
 const AUTHOR: &str = "程婧祎";
@@ -36,6 +37,7 @@ fn main() {
     let path: &str = "output/test.jpg";
     let quality: u8 = 60; // From 0 to 100, suggested value: 60
     let samples_per_pixel: u64 = 100;
+    let max_depth = 50;
     // Create image data
     let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
 
@@ -70,7 +72,7 @@ fn main() {
                 let u: f64 = (i as f64 + u_rand) / (width as f64 - 1.0);
                 let v: f64 = (j as f64 + v_rand) / (height as f64 - 1.0);
                 let r: Ray = cam.get_ray(u, v);
-                pixel_c += ray_color(r, &world);
+                pixel_c += ray_color(r, &world, max_depth);
             }
             let pixel_color: [u8; 3] = [
                 (clamp(pixel_c.x() * 0.01, 0.0, 0.999) * 255.).floor() as u8,
@@ -95,9 +97,14 @@ fn main() {
     }
 }
 
-fn ray_color(r: Ray, world: &dyn Hittable) -> Color {
+fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color {
+    if depth <= 0 {
+        return Color::new(0.0, 0.0, 0.0);
+    }
+
     if let Some(hit_rec) = world.hit(&r, 0.0, f64::INFINITY) {
-        return 0.5 * (hit_rec.normal + Color::new(1.0, 1.0, 1.0));
+        let target: Point3 = hit_rec.p + hit_rec.normal + Vec3::random_in_unit_sphere();
+        return 0.5 * ray_color(Ray::new(hit_rec.p, target - hit_rec.p), world, depth - 1);
     }
 
     let unit_direction: Vec3 = Vec3::unit_vector(r.dir);
