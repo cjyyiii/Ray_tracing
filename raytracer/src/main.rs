@@ -3,12 +3,10 @@ mod color;
 mod hittable;
 mod hittable_list;
 mod ray;
-mod rtweekend;
 mod sphere;
 mod vec3;
 
 use crate::vec3::Color;
-// use crate::vec3::Point3;
 use camera::Camera;
 use color::write_color;
 use hittable::Hittable;
