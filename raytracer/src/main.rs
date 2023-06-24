@@ -60,10 +60,10 @@ fn main() {
         ProgressBar::new((height * width) as u64)
     };
 
-    let mut rng = rand::thread_rng();
+    let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
     for j in 0..height {
         for i in 0..width {
-            let mut pixel_c: Color = Color::new(255.0, 0.0, 0.0);
+            let mut pixel_c: Color = Color::new(0.0, 0.0, 0.0);
             for _ in 0..samples_per_pixel {
                 let u_rand: f64 = rng.gen();
                 let v_rand: f64 = rng.gen();
