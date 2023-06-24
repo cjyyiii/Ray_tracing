@@ -8,7 +8,6 @@ mod vec3;
 use crate::vec3::Color;
 use crate::vec3::Point3;
 use color::write_color;
-use hittable::HitRecord;
 use hittable::Hittable;
 use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
