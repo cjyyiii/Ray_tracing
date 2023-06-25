@@ -50,6 +50,7 @@ fn main() {
     let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
     let material_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
     let material_left = Dielectric::new(1.5);
+    let material_left2 = Dielectric::new(1.5);
     let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
 
     HittableList::add(
@@ -66,7 +67,11 @@ fn main() {
     );
     HittableList::add(
         &mut world,
-        Box::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material_left)),
+        Box::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), -0.4, material_left)),
+    );
+    HittableList::add(
+        &mut world,
+        Box::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material_left2)),
     );
     HittableList::add(
         &mut world,
