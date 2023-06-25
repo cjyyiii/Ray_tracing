@@ -1,21 +1,27 @@
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Point3;
 use crate::vec3::Vec3;
 
-pub struct Sphere {
+pub struct Sphere<M: Material> {
     pub center: Point3,
     pub radius: f64,
+    pub material: M,
 }
 
-impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Self {
-        Sphere { center, radius }
+impl<M: Material> Sphere<M> {
+    pub fn new(center: Point3, radius: f64, material: M) -> Self {
+        Sphere {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
-impl Hittable for Sphere {
+impl<M: Material> Hittable for Sphere<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc: Vec3 = r.orig - self.center;
         let a: f64 = r.dir.squared_length();
@@ -40,7 +46,7 @@ impl Hittable for Sphere {
         let p: Vec3 = r.at(t);
         let outward_normal: Vec3 = (p - self.center) / self.radius;
 
-        let hit_rec: HitRecord = HitRecord::new(p, t, outward_normal, *r);
+        let hit_rec: HitRecord = HitRecord::new(p, t, &self.material, outward_normal, *r);
         Some(hit_rec)
     }
 }

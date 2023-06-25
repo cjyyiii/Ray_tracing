@@ -2,10 +2,14 @@ mod camera;
 mod color;
 mod hittable;
 mod hittable_list;
+mod material;
 mod ray;
 mod sphere;
 mod vec3;
 
+use crate::material::Lambertian;
+// use crate::material::Material;
+use crate::material::Metal;
 use crate::vec3::Color;
 use camera::Camera;
 use color::write_color;
@@ -17,7 +21,7 @@ use rand::Rng;
 pub use ray::Ray;
 use sphere::Sphere;
 use std::fs::File;
-use vec3::Point3;
+// use vec3::Point3;
 pub use vec3::Vec3;
 
 const AUTHOR: &str = "程婧祎";
@@ -42,13 +46,30 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
 
     let mut world: HittableList = HittableList::new();
+    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
+    let material_center = Lambertian::new(Color::new(0.7, 0.3, 0.3));
+    let material_left = Metal::new(Color::new(0.8, 0.8, 0.8), 0.3);
+    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 1.0);
+
     HittableList::add(
         &mut world,
-        Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)),
+        Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, material_center)),
     );
     HittableList::add(
         &mut world,
-        Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)),
+        Box::new(Sphere::new(
+            Vec3::new(0.0, -100.5, -1.0),
+            100.0,
+            material_ground,
+        )),
+    );
+    HittableList::add(
+        &mut world,
+        Box::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material_left)),
+    );
+    HittableList::add(
+        &mut world,
+        Box::new(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, material_right)),
     );
 
     let cam: Camera = Camera::new();
@@ -103,8 +124,11 @@ fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color {
     }
 
     if let Some(hit_rec) = world.hit(&r, 0.001, f64::INFINITY) {
-        let target: Point3 = hit_rec.p + Vec3::random_in_hemisphere(&hit_rec.normal);
-        return 0.5 * ray_color(Ray::new(hit_rec.p, target - hit_rec.p), world, depth - 1);
+        if let Some((scattered, attenuation)) = hit_rec.mat_ptr.scatter(&r, &hit_rec) {
+            return attenuation * ray_color(scattered, world, depth - 1);
+        } else {
+            return Color::new(0.0, 0.0, 0.0);
+        }
     }
 
     let unit_direction: Vec3 = Vec3::unit_vector(r.dir);

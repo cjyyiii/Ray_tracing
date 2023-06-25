@@ -1,5 +1,6 @@
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
+// use crate::material::Material;
 use crate::ray::Ray;
 
 pub struct HittableList {
@@ -29,7 +30,7 @@ impl Hittable for HittableList {
 
         for object in &self.hittable_list {
             if let Some(hit_rec) = object.hit(r, t_min, closest_so_far) {
-                hit_anything = Some(hit_rec);
+                hit_anything = Some(hit_rec.clone());
                 closest_so_far = hit_rec.t;
             }
         }
