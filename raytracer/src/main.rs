@@ -156,9 +156,24 @@ fn main() {
                 pixel_c += ray_color(r, &world, max_depth);
             }
             let pixel_color: [u8; 3] = [
-                (clamp((pixel_c.x() * 0.01).sqrt(), 0.0, 0.999) * 255.).floor() as u8,
-                (clamp((pixel_c.y() * 0.01).sqrt(), 0.0, 0.999) * 255.).floor() as u8,
-                (clamp((pixel_c.z() * 0.01).sqrt(), 0.0, 0.999) * 255.).floor() as u8,
+                (clamp(
+                    (pixel_c.x() * 1.0 / samples_per_pixel as f64).sqrt(),
+                    0.0,
+                    0.999,
+                ) * 255.)
+                    .floor() as u8,
+                (clamp(
+                    (pixel_c.y() * 1.0 / samples_per_pixel as f64).sqrt(),
+                    0.0,
+                    0.999,
+                ) * 255.)
+                    .floor() as u8,
+                (clamp(
+                    (pixel_c.z() * 1.0 / samples_per_pixel as f64).sqrt(),
+                    0.0,
+                    0.999,
+                ) * 255.)
+                    .floor() as u8,
             ];
             write_color(pixel_color, &mut img, i, height - j - 1);
             bar.inc(1);
