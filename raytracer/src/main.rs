@@ -22,7 +22,7 @@ use rand::Rng;
 pub use ray::Ray;
 use sphere::Sphere;
 use std::fs::File;
-// use vec3::Point3;
+use vec3::Point3;
 pub use vec3::Vec3;
 
 const AUTHOR: &str = "程婧祎";
@@ -31,54 +31,108 @@ fn is_ci() -> bool {
     option_env!("CI").unwrap_or_default() == "true"
 }
 
+fn random_scene() -> HittableList {
+    let mut world: HittableList = HittableList::new();
+    let material_ground: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    world.add(Box::new(Sphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        material_ground,
+    )));
+    let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
+    for a in -11..11 {
+        for b in -11..11 {
+            let choosemat: f64 = rng.gen();
+            let deltax: f64 = rng.gen();
+            let deltaz: f64 = rng.gen();
+            let center: Point3 = Point3::new(a as f64 + 0.9 * deltax, 0.2, b as f64 + 0.9 * deltaz);
+
+            if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+                if choosemat < 0.8 {
+                    let r: f64 = rng.gen_range(0.0..1.0);
+                    let g: f64 = rng.gen_range(0.0..1.0);
+                    let b: f64 = rng.gen_range(0.0..1.0);
+                    let p: Vec3 = Vec3::new(r, g, b);
+                    let albedo = p * p;
+                    let sphere_material = Lambertian::new(albedo);
+                    HittableList::add(
+                        &mut world,
+                        Box::new(Sphere::new(center, 0.2, sphere_material)),
+                    );
+                } else if choosemat < 0.95 {
+                    let r: f64 = rng.gen_range(0.5..1.0);
+                    let g: f64 = rng.gen_range(0.5..1.0);
+                    let b: f64 = rng.gen_range(0.5..1.0);
+                    let albedo: Vec3 = Vec3::new(r, g, b);
+                    let fuzz = rng.gen_range(0.0..0.5);
+                    let sphere_material = Metal::new(albedo, fuzz);
+                    HittableList::add(
+                        &mut world,
+                        Box::new(Sphere::new(center, 0.2, sphere_material)),
+                    );
+                } else {
+                    let sphere_material = Dielectric::new(1.5);
+                    world.add(Box::new(Sphere::new(center, 0.2, sphere_material)));
+                }
+            }
+        }
+    }
+    let material1 = Dielectric::new(1.5);
+    world.add(Box::new(Sphere::new(
+        Point3::new(0.0, 1.0, 0.0),
+        1.0,
+        material1,
+    )));
+
+    let material2 = Lambertian::new(Color::new(0.4, 0.2, 0.1));
+    world.add(Box::new(Sphere::new(
+        Point3::new(-4.0, 1.0, 0.0),
+        1.0,
+        material2,
+    )));
+
+    let material3 = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
+    world.add(Box::new(Sphere::new(
+        Point3::new(4.0, 1.0, 0.0),
+        1.0,
+        material3,
+    )));
+
+    world
+}
+
 fn main() {
     // get environment variable CI, which is true for GitHub Actions
     let is_ci: bool = is_ci();
 
     println!("CI: {}", is_ci);
 
-    let width: usize = 800;
+    let aspect_ratio: f64 = 3.0 / 2.0;
+    let width: usize = 1200;
     let height: usize = 800;
     let path: &str = "output/test.jpg";
     let quality: u8 = 60; // From 0 to 100, suggested value: 60
-    let samples_per_pixel: u64 = 100;
+    let samples_per_pixel: u64 = 500;
     let max_depth = 50;
     // Create image data
     let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
 
-    let mut world: HittableList = HittableList::new();
-    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let material_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    let material_left = Dielectric::new(1.5);
-    let material_left2 = Dielectric::new(1.5);
-    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
+    let world = random_scene();
 
-    HittableList::add(
-        &mut world,
-        Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, material_center)),
+    let lookfrom: Point3 = Point3::new(13.0, 2.0, 3.0);
+    let lookat: Point3 = Point3::new(0.0, 0.0, 0.0);
+    let vup: Vec3 = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus: f64 = 10.0;
+    let aperture: f64 = 0.1;
+    let cam: Camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        20.0,
+        aspect_ratio,
+        aperture,
+        dist_to_focus,
     );
-    HittableList::add(
-        &mut world,
-        Box::new(Sphere::new(
-            Vec3::new(0.0, -100.5, -1.0),
-            100.0,
-            material_ground,
-        )),
-    );
-    HittableList::add(
-        &mut world,
-        Box::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), -0.4, material_left)),
-    );
-    HittableList::add(
-        &mut world,
-        Box::new(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material_left2)),
-    );
-    HittableList::add(
-        &mut world,
-        Box::new(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, material_right)),
-    );
-
-    let cam: Camera = Camera::new();
 
     // Progress bar UI powered by library `indicatif`
     // You can use indicatif::ProgressStyle to make it more beautiful
