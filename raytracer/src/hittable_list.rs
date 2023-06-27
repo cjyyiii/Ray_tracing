@@ -1,10 +1,16 @@
+use std::sync::Arc;
+
+use crate::aabb::Aabb;
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
 // use crate::material::Material;
 use crate::ray::Ray;
+// use crate::sphere::MovingSphere;
+use crate::vec3::Vec3;
 
+#[derive(Clone)]
 pub struct HittableList {
-    pub hittable_list: Vec<Box<dyn Hittable>>,
+    pub hittable_list: Vec<Arc<dyn Hittable>>,
 }
 
 impl HittableList {
@@ -18,7 +24,7 @@ impl HittableList {
     //     self.hittable_list.clear();
     // }
 
-    pub fn add(&mut self, object: Box<dyn Hittable>) {
+    pub fn add(&mut self, object: Arc<dyn Hittable>) {
         self.hittable_list.push(object);
     }
 }
@@ -36,5 +42,28 @@ impl Hittable for HittableList {
         }
 
         hit_anything
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+        if self.hittable_list.is_empty() {
+            return None;
+        }
+
+        let mut output_box: Aabb = Aabb::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
+        let mut first_box: bool = true;
+
+        for object in &self.hittable_list {
+            if let Some(temp_box) = object.bounding_box(time0, time1) {
+                output_box = if first_box {
+                    temp_box
+                } else {
+                    Aabb::surrounding_box(&output_box, &temp_box)
+                };
+                first_box = false;
+            } else {
+                return None;
+            }
+        }
+        Some(output_box)
     }
 }

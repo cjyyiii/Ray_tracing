@@ -1,3 +1,4 @@
+use crate::aabb::Aabb;
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
 use crate::material::Material;
@@ -5,6 +6,7 @@ use crate::ray::Ray;
 use crate::vec3::Point3;
 use crate::vec3::Vec3;
 
+#[derive(Clone)]
 pub struct Sphere<M: Material> {
     pub center: Point3,
     pub radius: f64,
@@ -48,6 +50,14 @@ impl<M: Material> Hittable for Sphere<M> {
 
         let hit_rec: HitRecord = HitRecord::new(p, t, &self.material, outward_normal, *r);
         Some(hit_rec)
+    }
+
+    fn bounding_box(&self, _: f64, _: f64) -> Option<Aabb> {
+        let output_box = Aabb::new(
+            self.center - Vec3::new(self.radius, self.radius, self.radius),
+            self.center + Vec3::new(self.radius, self.radius, self.radius),
+        );
+        Some(output_box)
     }
 }
 
@@ -105,5 +115,18 @@ impl<M: Material> Hittable for MovingSphere<M> {
 
         let hit_rec: HitRecord = HitRecord::new(p, t, &self.mat_ptr, outward_normal, *r);
         Some(hit_rec)
+    }
+
+    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
+        let box0: Aabb = Aabb::new(
+            MovingSphere::center(self, _time0) - Vec3::new(self.radius, self.radius, self.radius),
+            MovingSphere::center(self, _time0) + Vec3::new(self.radius, self.radius, self.radius),
+        );
+        let box1: Aabb = Aabb::new(
+            MovingSphere::center(self, _time1) - Vec3::new(self.radius, self.radius, self.radius),
+            MovingSphere::center(self, _time1) + Vec3::new(self.radius, self.radius, self.radius),
+        );
+        let output_box: Aabb = Aabb::surrounding_box(&box0, &box1);
+        Some(output_box)
     }
 }

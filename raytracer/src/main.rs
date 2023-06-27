@@ -1,3 +1,5 @@
+mod aabb;
+mod bvh;
 mod camera;
 mod color;
 mod hittable;
@@ -9,6 +11,7 @@ mod vec3;
 
 use crate::material::{Dielectric, Lambertian, Metal};
 use crate::vec3::{Color, Point3, Vec3};
+use bvh::BVHNode;
 use camera::Camera;
 use color::write_color;
 use hittable::Hittable;
@@ -19,6 +22,7 @@ use rand::Rng;
 pub use ray::Ray;
 use sphere::{MovingSphere, Sphere};
 use std::fs::File;
+use std::sync::Arc;
 
 const AUTHOR: &str = "程婧祎";
 
@@ -29,7 +33,7 @@ fn is_ci() -> bool {
 fn random_scene() -> HittableList {
     let mut world: HittableList = HittableList::new();
     let material_ground: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
-    world.add(Box::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
         material_ground,
@@ -51,7 +55,7 @@ fn random_scene() -> HittableList {
                     let albedo: Vec3 = p * p;
                     let center2: Vec3 = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
                     let sphere_material = Lambertian::new(albedo);
-                    world.add(Box::new(MovingSphere::new(
+                    world.add(Arc::new(MovingSphere::new(
                         center,
                         center2,
                         0.0,
@@ -68,31 +72,31 @@ fn random_scene() -> HittableList {
                     let sphere_material = Metal::new(albedo, fuzz);
                     HittableList::add(
                         &mut world,
-                        Box::new(Sphere::new(center, 0.2, sphere_material)),
+                        Arc::new(Sphere::new(center, 0.2, sphere_material)),
                     );
                 } else {
                     let sphere_material = Dielectric::new(1.5);
-                    world.add(Box::new(Sphere::new(center, 0.2, sphere_material)));
+                    world.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
                 }
             }
         }
     }
     let material1 = Dielectric::new(1.5);
-    world.add(Box::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point3::new(0.0, 1.0, 0.0),
         1.0,
         material1,
     )));
 
     let material2 = Lambertian::new(Color::new(0.4, 0.2, 0.1));
-    world.add(Box::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point3::new(-4.0, 1.0, 0.0),
         1.0,
         material2,
     )));
 
     let material3 = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
-    world.add(Box::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point3::new(4.0, 1.0, 0.0),
         1.0,
         material3,
@@ -112,12 +116,13 @@ fn main() {
     let height: usize = 225;
     let path: &str = "output/test.jpg";
     let quality: u8 = 60; // From 0 to 100, suggested value: 60
-    let samples_per_pixel: u64 = 100;
+    let samples_per_pixel: u64 = 200;
     let max_depth = 50;
     // Create image data
     let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
 
-    let world = random_scene();
+    let world_scene = random_scene();
+    let world = BVHNode::new_boxed(world_scene, 0.0, 0.01);
 
     let lookfrom: Point3 = Point3::new(13.0, 2.0, 3.0);
     let lookat: Point3 = Point3::new(0.0, 0.0, 0.0);
@@ -147,6 +152,7 @@ fn main() {
 
     let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
     for j in 0..height {
+        let world_ptr_clone = world.clone();
         for i in 0..width {
             let mut pixel_c: Color = Color::new(0.0, 0.0, 0.0);
             for _ in 0..samples_per_pixel {
@@ -155,7 +161,7 @@ fn main() {
                 let u: f64 = (i as f64 + u_rand) / (width as f64 - 1.0);
                 let v: f64 = (j as f64 + v_rand) / (height as f64 - 1.0);
                 let r: Ray = cam.get_ray(u, v);
-                pixel_c += ray_color(r, &world, max_depth);
+                pixel_c += ray_color(r, &*world_ptr_clone, max_depth);
             }
             let pixel_color: [u8; 3] = [
                 (clamp(

@@ -1,4 +1,5 @@
 use rand::Rng;
+use std::ops::Index;
 use std::ops::Neg;
 use std::ops::{Add, AddAssign};
 use std::ops::{Div, DivAssign};
@@ -281,6 +282,19 @@ impl DivAssign<f64> for Vec3 {
             y: self.y / other,
             z: self.z / other,
         };
+    }
+}
+
+impl Index<i32> for Vec3 {
+    type Output = f64;
+
+    fn index(self: &Vec3, a: i32) -> &f64 {
+        match a {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => &0.0,
+        }
     }
 }
 
