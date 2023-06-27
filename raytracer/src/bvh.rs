@@ -14,10 +14,10 @@ pub struct BVHNode {
 
 impl BVHNode {
     pub fn new_boxed(list: HittableList, time0: f64, time1: f64) -> Arc<dyn Hittable> {
-        BVHNode::new(list.hittable_list, time0, time1)
+        BVHNode::init(list.hittable_list, time0, time1)
     }
 
-    pub fn new(
+    pub fn init(
         mut src_objects: Vec<Arc<dyn Hittable>>,
         time0: f64,
         time1: f64,
@@ -56,8 +56,8 @@ impl BVHNode {
                 let mut left_objects: Vec<Arc<dyn Hittable>> = src_objects;
                 let right_objects: Vec<Arc<dyn Hittable>> =
                     left_objects.split_off(left_objects.len() / 2);
-                let left: Arc<dyn Hittable> = Self::new(left_objects, time0, time1);
-                let right: Arc<dyn Hittable> = Self::new(right_objects, time0, time1);
+                let left: Arc<dyn Hittable> = Self::init(left_objects, time0, time1);
+                let right: Arc<dyn Hittable> = Self::init(right_objects, time0, time1);
                 let box_: Aabb = Aabb::surrounding_box(
                     &left.bounding_box(time0, time1).unwrap(),
                     &right.bounding_box(time0, time1).unwrap(),
