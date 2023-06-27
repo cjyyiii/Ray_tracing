@@ -7,11 +7,8 @@ mod ray;
 mod sphere;
 mod vec3;
 
-use crate::material::Dielectric;
-use crate::material::Lambertian;
-// use crate::material::Material;
-use crate::material::Metal;
-use crate::vec3::Color;
+use crate::material::{Dielectric, Lambertian, Metal};
+use crate::vec3::{Color, Point3, Vec3};
 use camera::Camera;
 use color::write_color;
 use hittable::Hittable;
@@ -20,10 +17,8 @@ use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use rand::Rng;
 pub use ray::Ray;
-use sphere::Sphere;
+use sphere::{MovingSphere, Sphere};
 use std::fs::File;
-use vec3::Point3;
-pub use vec3::Vec3;
 
 const AUTHOR: &str = "程婧祎";
 
@@ -53,12 +48,17 @@ fn random_scene() -> HittableList {
                     let g: f64 = rng.gen_range(0.0..1.0);
                     let b: f64 = rng.gen_range(0.0..1.0);
                     let p: Vec3 = Vec3::new(r, g, b);
-                    let albedo = p * p;
+                    let albedo: Vec3 = p * p;
+                    let center2: Vec3 = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
                     let sphere_material = Lambertian::new(albedo);
-                    HittableList::add(
-                        &mut world,
-                        Box::new(Sphere::new(center, 0.2, sphere_material)),
-                    );
+                    world.add(Box::new(MovingSphere::new(
+                        center,
+                        center2,
+                        0.0,
+                        1.0,
+                        0.2,
+                        sphere_material,
+                    )));
                 } else if choosemat < 0.95 {
                     let r: f64 = rng.gen_range(0.5..1.0);
                     let g: f64 = rng.gen_range(0.5..1.0);
@@ -107,12 +107,12 @@ fn main() {
 
     println!("CI: {}", is_ci);
 
-    let aspect_ratio: f64 = 3.0 / 2.0;
-    let width: usize = 1200;
-    let height: usize = 800;
+    let aspect_ratio: f64 = 16.0 / 9.0;
+    let width: usize = 400;
+    let height: usize = 225;
     let path: &str = "output/test.jpg";
     let quality: u8 = 60; // From 0 to 100, suggested value: 60
-    let samples_per_pixel: u64 = 500;
+    let samples_per_pixel: u64 = 100;
     let max_depth = 50;
     // Create image data
     let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
@@ -132,6 +132,8 @@ fn main() {
         aspect_ratio,
         aperture,
         dist_to_focus,
+        0.0,
+        1.0,
     );
 
     // Progress bar UI powered by library `indicatif`
