@@ -57,7 +57,7 @@ impl Hittable for HittableList {
                 output_box = if first_box {
                     temp_box
                 } else {
-                    Aabb::surrounding_box(&output_box, &temp_box)
+                    Aabb::surrounding_box(output_box, temp_box)
                 };
                 first_box = false;
             } else {

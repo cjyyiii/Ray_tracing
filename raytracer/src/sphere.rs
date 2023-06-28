@@ -21,6 +21,14 @@ impl<M: Material> Sphere<M> {
             material,
         }
     }
+
+    // fn get_sphere_uv(p: &Point3) -> (f64, f64) {
+    //     let theta = -p.y().acos();
+    //     let phi = (-p.z()).atan2(p.x()) + std::f64::consts::PI;
+    //     let u: f64 = phi / (2.0 * std::f64::consts::PI);
+    //     let v: f64 = theta / std::f64::consts::PI;
+    //     (u, v)
+    // }
 }
 
 impl<M: Material> Hittable for Sphere<M> {
@@ -47,13 +55,22 @@ impl<M: Material> Hittable for Sphere<M> {
         let t: f64 = root;
         let p: Vec3 = r.at(t);
         let outward_normal: Vec3 = (p - self.center) / self.radius;
+        // let (u, v) = Sphere::<M>::get_sphere_uv(&outward_normal);
 
-        let hit_rec: HitRecord = HitRecord::new(p, t, &self.material, outward_normal, *r);
+        let hit_rec: HitRecord = HitRecord::new(
+            p,
+            t,
+            // u,
+            //  v,
+            &self.material,
+            outward_normal,
+            *r,
+        );
         Some(hit_rec)
     }
 
     fn bounding_box(&self, _: f64, _: f64) -> Option<Aabb> {
-        let output_box = Aabb::new(
+        let output_box: Aabb = Aabb::new(
             self.center - Vec3::new(self.radius, self.radius, self.radius),
             self.center + Vec3::new(self.radius, self.radius, self.radius),
         );
@@ -112,8 +129,17 @@ impl<M: Material> Hittable for MovingSphere<M> {
         let t: f64 = root;
         let p: Vec3 = r.at(t);
         let outward_normal: Vec3 = (p - MovingSphere::center(self, r.tm)) / self.radius;
+        // let (u, v) = Sphere::<M>::get_sphere_uv(&outward_normal);
 
-        let hit_rec: HitRecord = HitRecord::new(p, t, &self.mat_ptr, outward_normal, *r);
+        let hit_rec: HitRecord = HitRecord::new(
+            p,
+            t,
+            // u,
+            //  v,
+            &self.mat_ptr,
+            outward_normal,
+            *r,
+        );
         Some(hit_rec)
     }
 
@@ -126,7 +152,7 @@ impl<M: Material> Hittable for MovingSphere<M> {
             MovingSphere::center(self, _time1) - Vec3::new(self.radius, self.radius, self.radius),
             MovingSphere::center(self, _time1) + Vec3::new(self.radius, self.radius, self.radius),
         );
-        let output_box: Aabb = Aabb::surrounding_box(&box0, &box1);
+        let output_box: Aabb = Aabb::surrounding_box(box0, box1);
         Some(output_box)
     }
 }

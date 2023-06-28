@@ -10,11 +10,21 @@ pub struct HitRecord<'a> {
     pub normal: Vec3,
     pub mat_ptr: &'a dyn Material,
     pub t: f64,
+    // pub u: f64,
+    // pub v: f64,
     pub front_face: bool,
 }
 
 impl<'a> HitRecord<'a> {
-    pub fn new(p: Point3, t: f64, mat_ptr: &'a dyn Material, outward_normal: Vec3, r: Ray) -> Self {
+    pub fn new(
+        p: Point3,
+        t: f64,
+        // u: f64,
+        // v: f64,
+        mat_ptr: &'a dyn Material,
+        outward_normal: Vec3,
+        r: Ray,
+    ) -> Self {
         let front_face: bool = Vec3::dot(r.dir, outward_normal) < 0.0;
         let normal: Vec3 = if front_face {
             outward_normal
@@ -27,6 +37,8 @@ impl<'a> HitRecord<'a> {
             normal,
             mat_ptr,
             t,
+            // u,
+            // v,
             front_face,
         }
     }

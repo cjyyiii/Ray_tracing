@@ -7,6 +7,7 @@ mod hittable_list;
 mod material;
 mod ray;
 mod sphere;
+mod texture;
 mod vec3;
 
 use crate::material::{Dielectric, Lambertian, Metal};
@@ -23,6 +24,7 @@ pub use ray::Ray;
 use sphere::{MovingSphere, Sphere};
 use std::fs::File;
 use std::sync::Arc;
+// use texture::{CheckerTexture, SolidColor};
 
 const AUTHOR: &str = "程婧祎";
 
@@ -38,6 +40,17 @@ fn random_scene() -> HittableList {
         1000.0,
         material_ground,
     )));
+
+    // let checker = Arc::new(CheckerTexture::new_from_color(
+    //     Color::new(0.2, 0.3, 0.1),
+    //     Color::new(0.9, 0.9, 0.9),
+    // ));
+    // world.add(Arc::new(Sphere::new(
+    //     Point3::new(0.0, -1000.0, 0.0),
+    //     1000.0,
+    //     Lambertian::new_arc(checker),
+    // )));
+
     let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
     for a in -11..11 {
         for b in -11..11 {
@@ -122,7 +135,7 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
 
     let world_scene = random_scene();
-    let world = BVHNode::new_boxed(world_scene, 0.0, 0.01);
+    let world: Arc<dyn Hittable> = BVHNode::new_boxed(world_scene, 0.0, 1.0);
 
     let lookfrom: Point3 = Point3::new(13.0, 2.0, 3.0);
     let lookat: Point3 = Point3::new(0.0, 0.0, 0.0);
@@ -151,8 +164,8 @@ fn main() {
     };
 
     let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
+
     for j in 0..height {
-        let world_ptr_clone = world.clone();
         for i in 0..width {
             let mut pixel_c: Color = Color::new(0.0, 0.0, 0.0);
             for _ in 0..samples_per_pixel {
@@ -161,7 +174,7 @@ fn main() {
                 let u: f64 = (i as f64 + u_rand) / (width as f64 - 1.0);
                 let v: f64 = (j as f64 + v_rand) / (height as f64 - 1.0);
                 let r: Ray = cam.get_ray(u, v);
-                pixel_c += ray_color(r, &*world_ptr_clone, max_depth);
+                pixel_c += ray_color(r, &*world, max_depth);
             }
             let pixel_color: [u8; 3] = [
                 (clamp(
