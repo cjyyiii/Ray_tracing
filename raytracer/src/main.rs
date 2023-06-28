@@ -5,6 +5,7 @@ mod color;
 mod hittable;
 mod hittable_list;
 mod material;
+mod perlin;
 mod ray;
 mod sphere;
 mod texture;
@@ -25,6 +26,7 @@ use sphere::{MovingSphere, Sphere};
 use std::fs::File;
 use std::sync::Arc;
 use texture::CheckerTexture;
+use texture::NoiseTexture;
 
 const AUTHOR: &str = "程婧祎";
 
@@ -118,6 +120,43 @@ fn random_scene() -> HittableList {
     world
 }
 
+fn two_speres() -> HittableList {
+    let mut world: HittableList = HittableList::new();
+    let checker = Arc::new(CheckerTexture::new_from_color(
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+    let checker1 = checker.clone();
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, -10.0, 0.0),
+        10.0,
+        Lambertian::new_arc(checker),
+    )));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, 10.0, 0.0),
+        10.0,
+        Lambertian::new_arc(checker1),
+    )));
+    world
+}
+
+fn two_perlin_spheres() -> HittableList {
+    let mut world: HittableList = HittableList::new();
+    let pertext = Arc::new(NoiseTexture::new());
+    let pertext1 = Arc::new(NoiseTexture::new());
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Lambertian::new_arc(pertext),
+    )));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        Lambertian::new_arc(pertext1),
+    )));
+    world
+}
+
 fn main() {
     // get environment variable CI, which is true for GitHub Actions
     let is_ci: bool = is_ci();
@@ -134,19 +173,44 @@ fn main() {
     // Create image data
     let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
 
-    let world_scene = random_scene();
+    let world_scene;
+
+    let lookfrom;
+    let lookat;
+    let vfov;
+    let mut aperture: f64 = 0.0;
+
+    match 0 {
+        1 => {
+            world_scene = random_scene();
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            aperture = 0.1;
+        }
+        2 => {
+            world_scene = two_speres();
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+        }
+        _ => {
+            world_scene = two_perlin_spheres();
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+        }
+    }
+
     let world: Arc<dyn Hittable> = BVHNode::new_boxed(world_scene, 0.0, 1.0);
 
-    let lookfrom: Point3 = Point3::new(13.0, 2.0, 3.0);
-    let lookat: Point3 = Point3::new(0.0, 0.0, 0.0);
     let vup: Vec3 = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus: f64 = 10.0;
-    let aperture: f64 = 0.1;
     let cam: Camera = Camera::new(
         lookfrom,
         lookat,
         vup,
-        20.0,
+        vfov,
         aspect_ratio,
         aperture,
         dist_to_focus,

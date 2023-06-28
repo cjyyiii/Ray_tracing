@@ -24,7 +24,7 @@ impl BVHNode {
             a.bounding_box(time0, time1).unwrap().min()[axis]
                 .partial_cmp(&b.bounding_box(time0, time1).unwrap().min()[axis])
                 .unwrap()
-        });
+        }); //基于https://github.com/JolyneFr/RayTracing/blob/master/src/bvh.rs
 
         let mut left = objects[0].clone();
         let mut right = objects[0].clone();
