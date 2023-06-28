@@ -24,7 +24,7 @@ pub use ray::Ray;
 use sphere::{MovingSphere, Sphere};
 use std::fs::File;
 use std::sync::Arc;
-// use texture::{CheckerTexture, SolidColor};
+use texture::CheckerTexture;
 
 const AUTHOR: &str = "程婧祎";
 
@@ -41,15 +41,15 @@ fn random_scene() -> HittableList {
         material_ground,
     )));
 
-    // let checker = Arc::new(CheckerTexture::new_from_color(
-    //     Color::new(0.2, 0.3, 0.1),
-    //     Color::new(0.9, 0.9, 0.9),
-    // ));
-    // world.add(Arc::new(Sphere::new(
-    //     Point3::new(0.0, -1000.0, 0.0),
-    //     1000.0,
-    //     Lambertian::new_arc(checker),
-    // )));
+    let checker = Arc::new(CheckerTexture::new_from_color(
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Lambertian::new_arc(checker),
+    )));
 
     let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
     for a in -11..11 {

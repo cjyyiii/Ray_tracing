@@ -22,13 +22,13 @@ impl<M: Material> Sphere<M> {
         }
     }
 
-    // fn get_sphere_uv(p: &Point3) -> (f64, f64) {
-    //     let theta = -p.y().acos();
-    //     let phi = (-p.z()).atan2(p.x()) + std::f64::consts::PI;
-    //     let u: f64 = phi / (2.0 * std::f64::consts::PI);
-    //     let v: f64 = theta / std::f64::consts::PI;
-    //     (u, v)
-    // }
+    fn get_sphere_uv(p: &Point3) -> (f64, f64) {
+        let theta = -p.y().acos();
+        let phi = (-p.z()).atan2(p.x()) + std::f64::consts::PI;
+        let u: f64 = phi / (2.0 * std::f64::consts::PI);
+        let v: f64 = theta / std::f64::consts::PI;
+        (u, v)
+    }
 }
 
 impl<M: Material> Hittable for Sphere<M> {
@@ -55,17 +55,9 @@ impl<M: Material> Hittable for Sphere<M> {
         let t: f64 = root;
         let p: Vec3 = r.at(t);
         let outward_normal: Vec3 = (p - self.center) / self.radius;
-        // let (u, v) = Sphere::<M>::get_sphere_uv(&outward_normal);
+        let (u, v) = Sphere::<M>::get_sphere_uv(&outward_normal);
 
-        let hit_rec: HitRecord = HitRecord::new(
-            p,
-            t,
-            // u,
-            //  v,
-            &self.material,
-            outward_normal,
-            *r,
-        );
+        let hit_rec: HitRecord = HitRecord::new(p, t, u, v, &self.material, outward_normal, *r);
         Some(hit_rec)
     }
 
@@ -129,17 +121,9 @@ impl<M: Material> Hittable for MovingSphere<M> {
         let t: f64 = root;
         let p: Vec3 = r.at(t);
         let outward_normal: Vec3 = (p - MovingSphere::center(self, r.tm)) / self.radius;
-        // let (u, v) = Sphere::<M>::get_sphere_uv(&outward_normal);
+        let (u, v) = Sphere::<M>::get_sphere_uv(&outward_normal);
 
-        let hit_rec: HitRecord = HitRecord::new(
-            p,
-            t,
-            // u,
-            //  v,
-            &self.mat_ptr,
-            outward_normal,
-            *r,
-        );
+        let hit_rec: HitRecord = HitRecord::new(p, t, u, v, &self.mat_ptr, outward_normal, *r);
         Some(hit_rec)
     }
 
