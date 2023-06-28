@@ -1,5 +1,5 @@
 // use crate::texture::Texture;
-use crate::vec3::{Point3, Vec3};
+use crate::vec3::Point3;
 use rand::Rng;
 
 pub struct Perlin {
@@ -44,7 +44,6 @@ impl Perlin {
         // let k = p.z().floor() as i32;
 
         // let mut c = [[[Vec3::new(0.0, 0.0, 0.0); 2]; 2]; 2];
-
     }
 
     pub fn perlin_generate_perm() -> Vec<i32> {
