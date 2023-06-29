@@ -1,4 +1,5 @@
 mod aabb;
+mod aarect;
 mod bvh;
 mod camera;
 mod color;
@@ -13,6 +14,7 @@ mod vec3;
 
 use crate::material::{Dielectric, Lambertian, Metal};
 use crate::vec3::{Color, Point3, Vec3};
+use aarect::XyRect;
 use bvh::BVHNode;
 use camera::Camera;
 use color::write_color;
@@ -20,6 +22,7 @@ use hittable::Hittable;
 use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
+use material::DiffuseLight;
 use rand::Rng;
 pub use ray::Ray;
 use sphere::{MovingSphere, Sphere};
@@ -168,6 +171,32 @@ fn earth_scene() -> HittableList {
     world
 }
 
+fn simple_light() -> HittableList {
+    let mut world = HittableList::new();
+    let pertext = Arc::new(NoiseTexture::new_sc(4.0));
+    let pertext1 = Arc::new(NoiseTexture::new_sc(4.0));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Lambertian::new_arc(pertext),
+    )));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        Lambertian::new_arc(pertext1),
+    )));
+
+    let difflight = Arc::new(DiffuseLight::new_col(Color::new(4.0, 4.0, 4.0)));
+    let difflight1 = DiffuseLight::new_col(Color::new(4.0, 4.0, 4.0));
+    world.add(Arc::new(XyRect::new(3.0, 5.0, 1.0, 3.0, -2.0, difflight)));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, 7.0, 0.0),
+        2.0,
+        difflight1,
+    )));
+    world
+}
+
 fn main() {
     // get environment variable CI, which is true for GitHub Actions
     let is_ci: bool = is_ci();
@@ -179,7 +208,7 @@ fn main() {
     let height: usize = 225;
     let path: &str = "output/test.jpg";
     let quality: u8 = 60; // From 0 to 100, suggested value: 60
-    let samples_per_pixel: u64 = 200;
+    let mut samples_per_pixel: u64 = 200;
     let max_depth = 50;
     // Create image data
     let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
@@ -190,10 +219,12 @@ fn main() {
     let lookat;
     let vfov;
     let mut aperture: f64 = 0.0;
+    let background;
 
     match 0 {
         1 => {
             world_scene = random_scene();
+            background = Color::new(0.70, 0.80, 1.00);
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
@@ -201,20 +232,31 @@ fn main() {
         }
         2 => {
             world_scene = two_speres();
+            background = Color::new(0.70, 0.80, 1.00);
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
         }
         3 => {
             world_scene = two_perlin_spheres();
+            background = Color::new(0.70, 0.80, 1.00);
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+        }
+        4 => {
+            world_scene = earth_scene();
+            background = Color::new(0.70, 0.80, 1.00);
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
         }
         _ => {
-            world_scene = earth_scene();
-            lookfrom = Point3::new(13.0, 2.0, 3.0);
-            lookat = Point3::new(0.0, 0.0, 0.0);
+            world_scene = simple_light();
+            samples_per_pixel = 400;
+            background = Color::new(0.0, 0.0, 0.0);
+            lookfrom = Point3::new(26.0, 3.0, 6.0);
+            lookat = Point3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
         }
     }
@@ -255,7 +297,7 @@ fn main() {
                 let u: f64 = (i as f64 + u_rand) / (width as f64 - 1.0);
                 let v: f64 = (j as f64 + v_rand) / (height as f64 - 1.0);
                 let r: Ray = cam.get_ray(u, v);
-                pixel_c += ray_color(r, &*world, max_depth);
+                pixel_c += ray_color(r, background, &*world, max_depth);
             }
             let pixel_color: [u8; 3] = [
                 (clamp(
@@ -295,23 +337,22 @@ fn main() {
     }
 }
 
-fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color {
+fn ray_color(r: Ray, background: Color, world: &dyn Hittable, depth: i32) -> Color {
     if depth <= 0 {
         return Color::new(0.0, 0.0, 0.0);
     }
 
     if let Some(hit_rec) = world.hit(&r, 0.001, f64::INFINITY) {
-        if let Some((scattered, attenuation)) = hit_rec.mat_ptr.scatter(&r, &hit_rec) {
-            return attenuation * ray_color(scattered, world, depth - 1);
+        let emitted: Color = hit_rec.mat_ptr.emitted(hit_rec.u, hit_rec.v, &hit_rec.p);
+        let tmp_rec = hit_rec.clone();
+        if let Some((scattered, attenuation)) = hit_rec.mat_ptr.scatter(&r, &tmp_rec) {
+            emitted + attenuation * ray_color(scattered, background, world, depth - 1)
         } else {
-            return Color::new(0.0, 0.0, 0.0);
+            emitted
         }
+    } else {
+        background
     }
-
-    let unit_direction: Vec3 = Vec3::unit_vector(r.dir);
-    let t: f64 = 0.5 * (unit_direction.y() + 1.0);
-    let ray_col: Color = Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t;
-    ray_col
 }
 
 pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
