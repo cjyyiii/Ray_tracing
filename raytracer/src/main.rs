@@ -25,8 +25,7 @@ pub use ray::Ray;
 use sphere::{MovingSphere, Sphere};
 use std::fs::File;
 use std::sync::Arc;
-use texture::CheckerTexture;
-use texture::NoiseTexture;
+use texture::{CheckerTexture, ImageTexture, NoiseTexture};
 
 const AUTHOR: &str = "程婧祎";
 
@@ -157,6 +156,18 @@ fn two_perlin_spheres() -> HittableList {
     world
 }
 
+fn earth_scene() -> HittableList {
+    let mut world: HittableList = HittableList::new();
+    let earth_texture = Arc::new(ImageTexture::new("earthmap.jpg"));
+    let earth_surface = Lambertian::new_arc(earth_texture);
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, 0.0, 0.0),
+        2.0,
+        earth_surface,
+    )));
+    world
+}
+
 fn main() {
     // get environment variable CI, which is true for GitHub Actions
     let is_ci: bool = is_ci();
@@ -194,8 +205,14 @@ fn main() {
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
         }
-        _ => {
+        3 => {
             world_scene = two_perlin_spheres();
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+        }
+        _ => {
+            world_scene = earth_scene();
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
@@ -297,7 +314,7 @@ fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color {
     ray_col
 }
 
-fn clamp(x: f64, min: f64, max: f64) -> f64 {
+pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
     if x < min {
         return min;
     }
