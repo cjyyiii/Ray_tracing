@@ -14,7 +14,7 @@ mod vec3;
 
 use crate::material::{Dielectric, Lambertian, Metal};
 use crate::vec3::{Color, Point3, Vec3};
-use aarect::XyRect;
+use aarect::{XyRect, XzRect, YzRect};
 use bvh::BVHNode;
 use camera::Camera;
 use color::write_color;
@@ -197,21 +197,42 @@ fn simple_light() -> HittableList {
     world
 }
 
+fn cornell_box() -> HittableList {
+    let mut world = HittableList::new();
+
+    let red = Arc::new(Lambertian::new(Color::new(0.65, 0.05, 0.05)));
+    let white = Arc::new(Lambertian::new(Color::new(0.73, 0.73, 0.73)));
+    let white1 = white.clone();
+    let white2 = white1.clone();
+    let green = Arc::new(Lambertian::new(Color::new(0.12, 0.45, 0.15)));
+    let light = Arc::new(DiffuseLight::new_col(Color::new(15.0, 15.0, 15.0)));
+
+    world.add(Arc::new(YzRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
+    world.add(Arc::new(YzRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
+    world.add(Arc::new(XzRect::new(
+        213.0, 343.0, 227.0, 332.0, 554.0, light,
+    )));
+    world.add(Arc::new(XzRect::new(0.0, 555.0, 0.0, 555.0, 0.0, white)));
+    world.add(Arc::new(XzRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white1)));
+    world.add(Arc::new(XyRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white2)));
+
+    world
+}
+
 fn main() {
     // get environment variable CI, which is true for GitHub Actions
     let is_ci: bool = is_ci();
 
     println!("CI: {}", is_ci);
 
-    let aspect_ratio: f64 = 16.0 / 9.0;
-    let width: usize = 400;
-    let height: usize = 225;
+    let mut aspect_ratio: f64 = 16.0 / 9.0;
+    let mut width = 400;
+    let mut height = 225;
     let path: &str = "output/test.jpg";
     let quality: u8 = 60; // From 0 to 100, suggested value: 60
     let mut samples_per_pixel: u64 = 200;
     let max_depth = 50;
     // Create image data
-    let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
 
     let world_scene;
 
@@ -251,7 +272,7 @@ fn main() {
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
         }
-        _ => {
+        5 => {
             world_scene = simple_light();
             samples_per_pixel = 400;
             background = Color::new(0.0, 0.0, 0.0);
@@ -259,7 +280,20 @@ fn main() {
             lookat = Point3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
         }
+        _ => {
+            world_scene = cornell_box();
+            aspect_ratio = 1.0;
+            width = 600;
+            height = 600;
+            samples_per_pixel = 200;
+            background = Color::new(0.0, 0.0, 0.0);
+            lookfrom = Point3::new(278.0, 278.0, -800.0);
+            lookat = Point3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
+        }
     }
+
+    let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
 
     let world: Arc<dyn Hittable> = BVHNode::new_boxed(world_scene, 0.0, 1.0);
 
