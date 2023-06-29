@@ -19,7 +19,7 @@ use aarect::{XyRect, XzRect, YzRect};
 use bvh::BVHNode;
 use camera::Camera;
 use color::write_color;
-use hittable::Hittable;
+use hittable::{Hittable, RotateY, Translate};
 use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
@@ -208,6 +208,8 @@ fn cornell_box() -> HittableList {
     let white2 = white1.clone();
     let white3 = white2.clone();
     let white4 = white3.clone();
+    let white5 = white4.clone();
+    let white6 = white5.clone();
     let green = Arc::new(Lambertian::new(Color::new(0.12, 0.45, 0.15)));
     let light = Arc::new(DiffuseLight::new_col(Color::new(15.0, 15.0, 15.0)));
 
@@ -228,6 +230,29 @@ fn cornell_box() -> HittableList {
         Point3::new(265.0, 0.0, 295.0),
         Point3::new(430.0, 330.0, 460.0),
         white4,
+    )));
+
+    world.add(Arc::new(Translate::new(
+        Arc::new(RotateY::new(
+            Arc::new(Box_::new(
+                Point3::new(0.0, 0.0, 0.0),
+                Point3::new(165.0, 330.0, 165.0),
+                white5,
+            )),
+            15.0,
+        )),
+        Vec3::new(265.0, 0.0, 295.0),
+    )));
+    world.add(Arc::new(Translate::new(
+        Arc::new(RotateY::new(
+            Arc::new(Box_::new(
+                Point3::new(0.0, 0.0, 0.0),
+                Point3::new(165.0, 165.0, 165.0),
+                white6,
+            )),
+            -18.0,
+        )),
+        Vec3::new(130.0, 0.0, 65.0),
     )));
 
     world
