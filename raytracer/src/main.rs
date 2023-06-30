@@ -4,6 +4,7 @@ mod r#box;
 mod bvh;
 mod camera;
 mod color;
+mod constant_medium;
 mod hittable;
 mod hittable_list;
 mod material;
@@ -19,6 +20,7 @@ use aarect::{XyRect, XzRect, YzRect};
 use bvh::BVHNode;
 use camera::Camera;
 use color::write_color;
+use constant_medium::ConstantMediun;
 use hittable::{Hittable, RotateY, Translate};
 use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
@@ -208,8 +210,6 @@ fn cornell_box() -> HittableList {
     let white2 = white1.clone();
     let white3 = white2.clone();
     let white4 = white3.clone();
-    // let white5 = white4.clone();
-    // let white6 = white5.clone();
     let green = Arc::new(Lambertian::new(Color::new(0.12, 0.45, 0.15)));
     let light = Arc::new(DiffuseLight::new_col(Color::new(15.0, 15.0, 15.0)));
 
@@ -221,16 +221,6 @@ fn cornell_box() -> HittableList {
     world.add(Arc::new(XzRect::new(0.0, 555.0, 0.0, 555.0, 0.0, white)));
     world.add(Arc::new(XzRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white1)));
     world.add(Arc::new(XyRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white2)));
-    // world.add(Arc::new(Box_::new(
-    //     Point3::new(130.0, 0.0, 65.0),
-    //     Point3::new(295.0, 165.0, 230.0),
-    //     white3,
-    // )));
-    // world.add(Arc::new(Box_::new(
-    //     Point3::new(265.0, 0.0, 295.0),
-    //     Point3::new(430.0, 330.0, 460.0),
-    //     white4,
-    // )));
 
     world.add(Arc::new(Translate::new(
         Arc::new(RotateY::new(
@@ -258,6 +248,166 @@ fn cornell_box() -> HittableList {
     world
 }
 
+fn cornell_smoke() -> HittableList {
+    let mut world = HittableList::new();
+    let red = Arc::new(Lambertian::new(Color::new(0.65, 0.05, 0.05)));
+    let white = Arc::new(Lambertian::new(Color::new(0.73, 0.73, 0.73)));
+    let white1 = white.clone();
+    let white2 = white1.clone();
+    let white3 = white2.clone();
+    let white4 = white3.clone();
+    let green = Arc::new(Lambertian::new(Color::new(0.12, 0.45, 0.15)));
+    let light: Arc<DiffuseLight> = Arc::new(DiffuseLight::new_col(Color::new(7.0, 7.0, 7.0)));
+    world.add(Arc::new(YzRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
+    world.add(Arc::new(YzRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
+    world.add(Arc::new(XzRect::new(
+        113.0, 443.0, 127.0, 432.0, 554.0, light,
+    )));
+    world.add(Arc::new(XzRect::new(0.0, 555.0, 0.0, 555.0, 0.0, white)));
+    world.add(Arc::new(XzRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white1)));
+    world.add(Arc::new(XyRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white2)));
+
+    world.add(Arc::new(ConstantMediun::new_col(
+        Arc::new(Translate::new(
+            Arc::new(RotateY::new(
+                Arc::new(Box_::new(
+                    Point3::new(0.0, 0.0, 0.0),
+                    Point3::new(165.0, 330.0, 165.0),
+                    white3,
+                )),
+                15.0,
+            )),
+            Vec3::new(265.0, 0.0, 295.0),
+        )),
+        0.01,
+        Vec3::new(0.0, 0.0, 0.0),
+    )));
+    world.add(Arc::new(ConstantMediun::new_col(
+        Arc::new(Translate::new(
+            Arc::new(RotateY::new(
+                Arc::new(Box_::new(
+                    Point3::new(0.0, 0.0, 0.0),
+                    Point3::new(165.0, 165.0, 165.0),
+                    white4,
+                )),
+                -18.0,
+            )),
+            Vec3::new(130.0, 0.0, 65.0),
+        )),
+        0.01,
+        Vec3::new(1.0, 1.0, 1.0),
+    )));
+    world
+}
+
+fn final_scene() -> HittableList {
+    let mut boxes1 = HittableList::new();
+    let ground = Arc::new(Lambertian::new(Vec3::new(0.48, 0.83, 0.53)));
+    const BOXES_PER_SIDE: i32 = 20;
+    let mut rng = rand::thread_rng();
+    for i in 0..BOXES_PER_SIDE {
+        for j in 0..BOXES_PER_SIDE {
+            for _ in 0..BOXES_PER_SIDE {
+                let w = 100.0;
+                let x0 = -1000.0 + i as f64 * w;
+                let z0 = -1000.0 + j as f64 * w;
+                let y0 = 0.0;
+                let x1 = x0 + w;
+                let y1 = rng.gen_range(0.0..101.0);
+                let z1 = z0 + w;
+
+                boxes1.add(Arc::new(Box_::new(
+                    Point3::new(x0, y0, z0),
+                    Point3::new(x1, y1, z1),
+                    ground.clone(),
+                )));
+            }
+        }
+    }
+
+    let mut world = HittableList::new();
+    world.add(BVHNode::new_boxed(boxes1, 0.0, 1.0));
+    let light: Arc<DiffuseLight> = Arc::new(DiffuseLight::new_col(Color::new(7.0, 7.0, 7.0)));
+    world.add(Arc::new(XzRect::new(
+        123.0, 423.0, 147.0, 412.0, 554.0, light,
+    )));
+
+    let center1 = Point3::new(400.0, 400.0, 200.0);
+    let center2 = center1 + Vec3::new(30.0, 0.0, 0.0);
+    let moving_sphere_material = Lambertian::new(Vec3::new(0.7, 0.3, 0.1));
+
+    world.add(Arc::new(MovingSphere::new(
+        center1,
+        center2,
+        0.0,
+        1.0,
+        50.0,
+        moving_sphere_material,
+    )));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(260.0, 150.0, 45.0),
+        50.0,
+        Dielectric::new(1.5),
+    )));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, 150.0, 145.0),
+        50.0,
+        Metal::new(Color::new(0.8, 0.8, 0.9), 1.0),
+    )));
+
+    let boundary = Arc::new(Sphere::new(
+        Point3::new(360.0, 150.0, 145.0),
+        70.0,
+        Dielectric::new(1.5),
+    ));
+    world.add(boundary.clone());
+    world.add(Arc::new(ConstantMediun::new_col(
+        boundary,
+        0.2,
+        Color::new(0.2, 0.4, 0.9),
+    )));
+    let boundary1 = Arc::new(Sphere::new(
+        Point3::new(0.0, 0.0, 0.0),
+        5000.0,
+        Dielectric::new(1.5),
+    ));
+    world.add(Arc::new(ConstantMediun::new_col(
+        boundary1,
+        0.0001,
+        Color::new(1.0, 1.0, 1.0),
+    )));
+
+    let emat = Lambertian::new_arc(Arc::new(ImageTexture::new("earthmap.jpg")));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(400.0, 200.0, 400.0),
+        100.0,
+        emat,
+    )));
+
+    world.add(Arc::new(Sphere::new(
+        Point3::new(220.0, 280.0, 300.0),
+        80.0,
+        Lambertian::new_arc(Arc::new(NoiseTexture::new_sc(0.1))),
+    )));
+
+    let mut boxes2 = HittableList::new();
+    let mut rng = rand::thread_rng();
+    for _ in 0..1000 {
+        let x = rng.gen_range(0.0..165.0);
+        let y = rng.gen_range(0.0..165.0);
+        let z = rng.gen_range(0.0..165.0);
+        let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+        boxes2.add(Arc::new(Sphere::new(Point3::new(x, y, z), 10.0, white)));
+    }
+
+    let bvh2 = BVHNode::new_boxed(boxes2, 0.0, 1.0);
+    world.add(Arc::new(Translate::new(
+        Arc::new(RotateY::new(bvh2, 15.0)),
+        Vec3::new(-100.0, 270.0, 395.0),
+    )));
+
+    world
+}
 fn main() {
     // get environment variable CI, which is true for GitHub Actions
     let is_ci: bool = is_ci();
@@ -310,6 +460,15 @@ fn main() {
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
+            // world_scene = final_scene();
+            // aspect_ratio = 1.0;
+            // width = 400; //800
+            // height = 400; //800
+            // samples_per_pixel = 100; //10000
+            // background = Color::new(0.0, 0.0, 0.0);
+            // lookfrom = Point3::new(478.0, 278.0, -600.0);
+            // lookat = Point3::new(278.0, 278.0, 0.0);
+            // vfov = 40.0;
         }
         5 => {
             world_scene = simple_light();
@@ -319,7 +478,7 @@ fn main() {
             lookat = Point3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
         }
-        _ => {
+        6 => {
             world_scene = cornell_box();
             aspect_ratio = 1.0;
             width = 600;
@@ -327,6 +486,33 @@ fn main() {
             samples_per_pixel = 200;
             background = Color::new(0.0, 0.0, 0.0);
             lookfrom = Point3::new(278.0, 278.0, -800.0);
+            lookat = Point3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
+        }
+        7 => {
+            world_scene = cornell_smoke();
+            aspect_ratio = 1.0;
+            width = 600;
+            height = 600;
+            samples_per_pixel = 200;
+            background = Color::new(0.0, 0.0, 0.0);
+            lookfrom = Point3::new(278.0, 278.0, -800.0);
+            lookat = Point3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
+        }
+        _ => {
+            // world_scene = earth_scene();
+            // background = Color::new(0.70, 0.80, 1.00);
+            // lookfrom = Point3::new(13.0, 2.0, 3.0);
+            // lookat = Point3::new(0.0, 0.0, 0.0);
+            // vfov = 20.0;
+            world_scene = final_scene();
+            aspect_ratio = 1.0;
+            width = 400; //800
+            height = 400; //800
+            samples_per_pixel = 100; //10000
+            background = Color::new(0.0, 0.0, 0.0);
+            lookfrom = Point3::new(478.0, 278.0, -600.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
         }
