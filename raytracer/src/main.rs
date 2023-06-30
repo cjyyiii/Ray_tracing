@@ -508,9 +508,9 @@ fn main() {
             // vfov = 20.0;
             world_scene = final_scene();
             aspect_ratio = 1.0;
-            width = 400; //800
-            height = 400; //800
-            samples_per_pixel = 100; //10000
+            width = 800;
+            height = 800;
+            samples_per_pixel = 10000;
             background = Color::new(0.0, 0.0, 0.0);
             lookfrom = Point3::new(478.0, 278.0, -600.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
