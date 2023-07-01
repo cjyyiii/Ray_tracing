@@ -455,20 +455,20 @@ fn main() {
             vfov = 20.0;
         }
         4 => {
-            world_scene = earth_scene();
-            background = Color::new(0.70, 0.80, 1.00);
-            lookfrom = Point3::new(13.0, 2.0, 3.0);
-            lookat = Point3::new(0.0, 0.0, 0.0);
-            vfov = 20.0;
-            // world_scene = final_scene();
-            // aspect_ratio = 1.0;
-            // width = 400; //800
-            // height = 400; //800
-            // samples_per_pixel = 100; //10000
-            // background = Color::new(0.0, 0.0, 0.0);
-            // lookfrom = Point3::new(478.0, 278.0, -600.0);
-            // lookat = Point3::new(278.0, 278.0, 0.0);
-            // vfov = 40.0;
+            // world_scene = earth_scene();
+            // background = Color::new(0.70, 0.80, 1.00);
+            // lookfrom = Point3::new(13.0, 2.0, 3.0);
+            // lookat = Point3::new(0.0, 0.0, 0.0);
+            // vfov = 20.0;
+            world_scene = final_scene();
+            aspect_ratio = 1.0;
+            width = 400; //800
+            height = 400; //800
+            samples_per_pixel = 100; //10000
+            background = Color::new(0.0, 0.0, 0.0);
+            lookfrom = Point3::new(478.0, 278.0, -600.0);
+            lookat = Point3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
         }
         5 => {
             world_scene = simple_light();
@@ -501,20 +501,20 @@ fn main() {
             vfov = 40.0;
         }
         _ => {
-            // world_scene = earth_scene();
-            // background = Color::new(0.70, 0.80, 1.00);
-            // lookfrom = Point3::new(13.0, 2.0, 3.0);
-            // lookat = Point3::new(0.0, 0.0, 0.0);
-            // vfov = 20.0;
-            world_scene = final_scene();
-            aspect_ratio = 1.0;
-            width = 800;
-            height = 800;
-            samples_per_pixel = 10000;
-            background = Color::new(0.0, 0.0, 0.0);
-            lookfrom = Point3::new(478.0, 278.0, -600.0);
-            lookat = Point3::new(278.0, 278.0, 0.0);
-            vfov = 40.0;
+            world_scene = earth_scene();
+            background = Color::new(0.70, 0.80, 1.00);
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            // world_scene = final_scene();
+            // aspect_ratio = 1.0;
+            // width = 800;
+            // height = 800;
+            // samples_per_pixel = 100; //10000
+            // background = Color::new(0.0, 0.0, 0.0);
+            // lookfrom = Point3::new(478.0, 278.0, -600.0);
+            // lookat = Point3::new(278.0, 278.0, 0.0);
+            // vfov = 40.0;
         }
     }
 

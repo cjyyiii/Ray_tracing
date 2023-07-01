@@ -109,15 +109,16 @@ impl ImageTexture {
     pub fn new(filename: &str) -> Self {
         // let components_per_pixel = ImageTexture::BYTES_PER_PIXEL;
 
-        let data = image::open(Path::new(filename)).unwrap().to_rgb8();
-        let width = data.width() as usize;
-        let height = data.height() as usize;
-        let bytes_per_scanline = ImageTexture::BYTES_PER_PIXEL * width;
+        let data = image::open(filename).unwrap().to_rgb8();
+        // let width = data.width() as usize;
+        // let height = data.height() as usize;
+        let (width, height) = data.dimensions();
+        let bytes_per_scanline = ImageTexture::BYTES_PER_PIXEL * width as usize;
 
         Self {
             data,
-            width,
-            height,
+            width: width as usize,
+            height: height as usize,
             bytes_per_scanline,
         }
     }
@@ -129,7 +130,7 @@ impl Texture for ImageTexture {
             Color::new(0.0, 1.0, 1.0)
         } else {
             let _u = clamp(u, 0.0, 1.0);
-            let _v = 1.0 - clamp(v, 0.0, 1.0);
+            let _v = clamp(v.abs(), 0.0, 1.0);
 
             let mut i = (_u * self.width as f64).floor() as usize;
             let mut j = (_v * self.height as f64).floor() as usize;
