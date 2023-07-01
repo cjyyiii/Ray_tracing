@@ -23,7 +23,7 @@ use color::write_color;
 use constant_medium::ConstantMediun;
 use hittable::{Hittable, RotateY, Translate};
 use hittable_list::HittableList;
-use image::{ImageBuffer, RgbImage};
+use image::{ImageBuffer};
 use indicatif::ProgressBar;
 use material::DiffuseLight;
 use r#box::Box_;
@@ -31,7 +31,8 @@ use rand::Rng;
 pub use ray::Ray;
 use sphere::{MovingSphere, Sphere};
 use std::fs::File;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use std::thread;
 use texture::{CheckerTexture, ImageTexture, NoiseTexture};
 
 const AUTHOR: &str = "程婧祎";
@@ -504,9 +505,12 @@ fn main() {
         }
     }
 
-    let mut img: RgbImage = ImageBuffer::new(width.try_into().unwrap(), height.try_into().unwrap());
+    let img = Arc::new(Mutex::new(ImageBuffer::new(
+        width.try_into().unwrap(),
+        height.try_into().unwrap(),
+    )));
 
-    let world: Arc<dyn Hittable> = BVHNode::new_boxed(world_scene, 0.0, 1.0);
+    let world: Arc<dyn Hittable + Send + Sync> = BVHNode::new_boxed(world_scene, 0.0, 1.0);
 
     let vup: Vec3 = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus: f64 = 10.0;
@@ -525,48 +529,68 @@ fn main() {
     // Progress bar UI powered by library `indicatif`
     // You can use indicatif::ProgressStyle to make it more beautiful
     // You can also use indicatif::MultiProgress in multi-threading to show progress of each thread
-    let bar: ProgressBar = if is_ci {
-        ProgressBar::hidden()
+    let bar: Arc<ProgressBar> = if is_ci {
+        Arc::new(ProgressBar::hidden())
     } else {
-        ProgressBar::new((height * width) as u64)
+        Arc::new(ProgressBar::new((height * width) as u64))
     };
 
-    let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
+    // let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
 
-    for j in 0..height {
-        for i in 0..width {
-            let mut pixel_c: Color = Color::new(0.0, 0.0, 0.0);
-            for _ in 0..samples_per_pixel {
-                let u_rand: f64 = rng.gen();
-                let v_rand: f64 = rng.gen();
-                let u: f64 = (i as f64 + u_rand) / (width as f64 - 1.0);
-                let v: f64 = (j as f64 + v_rand) / (height as f64 - 1.0);
-                let r: Ray = cam.get_ray(u, v);
-                pixel_c += ray_color(r, background, &*world, max_depth);
+    let mut handles = vec![];
+    let thread_num = 31;
+
+    for k in 0..thread_num {
+        let world = world.clone();
+        let img = img.clone();
+        let bar = bar.clone();
+        let background_ = background.clone();
+        let cam_ = cam.clone();
+
+        let handle = thread::spawn(move || {
+            for j in (k * width / thread_num)..((k + 1) * width / thread_num) {
+                for i in 0..width {
+                    let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
+
+                    let mut pixel_c: Color = Color::new(0.0, 0.0, 0.0);
+                    for _ in 0..samples_per_pixel {
+                        let u_rand: f64 = rng.gen();
+                        let v_rand: f64 = rng.gen();
+                        let u: f64 = (i as f64 + u_rand) / (width as f64 - 1.0);
+                        let v: f64 = (j as f64 + v_rand) / (height as f64 - 1.0);
+                        let r: Ray = cam_.get_ray(u, v);
+                        pixel_c += ray_color(r, background_, &*world, max_depth);
+                    }
+                    let pixel_color: [u8; 3] = [
+                        (clamp(
+                            (pixel_c.x() * 1.0 / samples_per_pixel as f64).sqrt(),
+                            0.0,
+                            0.999,
+                        ) * 255.)
+                            .floor() as u8,
+                        (clamp(
+                            (pixel_c.y() * 1.0 / samples_per_pixel as f64).sqrt(),
+                            0.0,
+                            0.999,
+                        ) * 255.)
+                            .floor() as u8,
+                        (clamp(
+                            (pixel_c.z() * 1.0 / samples_per_pixel as f64).sqrt(),
+                            0.0,
+                            0.999,
+                        ) * 255.)
+                            .floor() as u8,
+                    ];
+                    write_color(pixel_color, &mut img.lock().unwrap(), i, height - j - 1);
+                    bar.inc(1);
+                }
             }
-            let pixel_color: [u8; 3] = [
-                (clamp(
-                    (pixel_c.x() * 1.0 / samples_per_pixel as f64).sqrt(),
-                    0.0,
-                    0.999,
-                ) * 255.)
-                    .floor() as u8,
-                (clamp(
-                    (pixel_c.y() * 1.0 / samples_per_pixel as f64).sqrt(),
-                    0.0,
-                    0.999,
-                ) * 255.)
-                    .floor() as u8,
-                (clamp(
-                    (pixel_c.z() * 1.0 / samples_per_pixel as f64).sqrt(),
-                    0.0,
-                    0.999,
-                ) * 255.)
-                    .floor() as u8,
-            ];
-            write_color(pixel_color, &mut img, i, height - j - 1);
-            bar.inc(1);
-        }
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
     }
 
     // Finish progress bar
@@ -574,7 +598,9 @@ fn main() {
 
     // Output image to file
     println!("Ouput image as \"{}\"\n Author: {}", path, AUTHOR);
-    let output_image: image::DynamicImage = image::DynamicImage::ImageRgb8(img);
+    // let output_image: image::DynamicImage = image::DynamicImage::ImageRgb8(img);
+    let output_image =
+        image::DynamicImage::ImageRgb8(Mutex::into_inner(Arc::into_inner(img).unwrap()).unwrap());
     let mut output_file: File = File::create(path).unwrap();
     match output_image.write_to(&mut output_file, image::ImageOutputFormat::Jpeg(quality)) {
         Ok(_) => {}

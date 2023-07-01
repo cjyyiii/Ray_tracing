@@ -6,17 +6,25 @@ use rand::Rng;
 use std::sync::Arc;
 
 pub struct BVHNode {
-    left: Arc<dyn Hittable>,
-    right: Arc<dyn Hittable>,
+    left: Arc<dyn Hittable + Send + Sync>,
+    right: Arc<dyn Hittable + Send + Sync>,
     box_: Aabb,
 }
 
 impl BVHNode {
-    pub fn new_boxed(list: HittableList, time0: f64, time1: f64) -> Arc<dyn Hittable> {
+    pub fn new_boxed(
+        list: HittableList,
+        time0: f64,
+        time1: f64,
+    ) -> Arc<dyn Hittable + Send + Sync> {
         BVHNode::build(list.hittable_list, time0, time1)
     }
 
-    pub fn build(src_objects: Vec<Arc<dyn Hittable>>, time0: f64, time1: f64) -> Arc<dyn Hittable> {
+    pub fn build(
+        src_objects: Vec<Arc<dyn Hittable + Send + Sync>>,
+        time0: f64,
+        time1: f64,
+    ) -> Arc<dyn Hittable + Send + Sync> {
         let axis: i32 = rand::thread_rng().gen_range(0..3);
         let mut objects = src_objects;
 
@@ -33,8 +41,8 @@ impl BVHNode {
             1 => {}
             2 => right = objects[1].clone(),
             _ => {
-                let mut l: Vec<Arc<dyn Hittable>> = objects;
-                let r: Vec<Arc<dyn Hittable>> = l.split_off(l.len() / 2);
+                let mut l: Vec<Arc<dyn Hittable + Send + Sync>> = objects;
+                let r: Vec<Arc<dyn Hittable + Send + Sync>> = l.split_off(l.len() / 2);
                 left = BVHNode::build(l, time0, time1);
                 right = BVHNode::build(r, time0, time1);
             }

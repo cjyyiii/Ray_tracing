@@ -15,7 +15,7 @@ pub struct Box_ {
 }
 
 impl Box_ {
-    pub fn new(p0: Point3, p1: Point3, ptr: Arc<dyn Material>) -> Self {
+    pub fn new(p0: Point3, p1: Point3, ptr: Arc<dyn Material + Send + Sync>) -> Self {
         let mut tmp_box: Box_ = Self {
             box_min: p0,
             box_max: p1,

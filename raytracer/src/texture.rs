@@ -8,7 +8,7 @@ use crate::{
     vec3::{Color, Point3},
 };
 
-pub trait Texture {
+pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
 }
 
@@ -35,8 +35,8 @@ impl Texture for SolidColor {
 }
 
 pub struct CheckerTexture {
-    even: Arc<dyn Texture>,
-    odd: Arc<dyn Texture>,
+    even: Arc<dyn Texture + Send + Sync>,
+    odd: Arc<dyn Texture + Send + Sync>,
 }
 
 impl CheckerTexture {
@@ -47,7 +47,7 @@ impl CheckerTexture {
         }
     }
 
-    // pub fn new(_even: Arc<dyn Texture>, _odd: Arc<dyn Texture>) -> Self {
+    // pub fn new(_even: Arc<dyn Texture + Send + Sync>, _odd: Arc<dyn Texture + Send + Sync>) -> Self {
     //     Self {
     //         even: _even,
     //         odd: _odd,

@@ -54,19 +54,19 @@ impl<'a> HitRecord<'a> {
     //     };
     // }
 }
-pub trait Hittable {
+pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb>;
 }
 
 pub struct Translate {
-    pub ptr: Arc<dyn Hittable>,
+    pub ptr: Arc<dyn Hittable + Send + Sync>,
     pub offset: Vec3,
 }
 
 impl Translate {
-    pub fn new(p: Arc<dyn Hittable>, displacement: Vec3) -> Self {
+    pub fn new(p: Arc<dyn Hittable + Send + Sync>, displacement: Vec3) -> Self {
         Self {
             ptr: p,
             offset: displacement,
@@ -107,7 +107,7 @@ impl Hittable for Translate {
 }
 
 pub struct RotateY {
-    pub ptr: Arc<dyn Hittable>,
+    pub ptr: Arc<dyn Hittable + Send + Sync>,
     pub sin_theta: f64,
     pub cos_theta: f64,
     pub hasbox: bool,
@@ -115,7 +115,7 @@ pub struct RotateY {
 }
 
 impl RotateY {
-    pub fn new(p: Arc<dyn Hittable>, angle: f64) -> Self {
+    pub fn new(p: Arc<dyn Hittable + Send + Sync>, angle: f64) -> Self {
         let radians = angle * std::f64::consts::PI / 180.0;
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();

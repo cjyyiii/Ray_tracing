@@ -10,7 +10,7 @@ use crate::vec3::Vec3;
 
 #[derive(Clone)]
 pub struct HittableList {
-    pub hittable_list: Vec<Arc<dyn Hittable>>,
+    pub hittable_list: Vec<Arc<dyn Hittable + Send + Sync>>,
 }
 
 impl HittableList {
@@ -24,7 +24,7 @@ impl HittableList {
     //     self.hittable_list.clear();
     // }
 
-    pub fn add(&mut self, object: Arc<dyn Hittable>) {
+    pub fn add(&mut self, object: Arc<dyn Hittable + Send + Sync>) {
         self.hittable_list.push(object);
     }
 }

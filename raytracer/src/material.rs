@@ -7,7 +7,7 @@ use crate::vec3::Vec3;
 use crate::vec3::{Color, Point3};
 use rand::Rng;
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Ray, Color)>;
     fn emitted(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
         Color::new(0.0, 0.0, 0.0)
@@ -15,11 +15,11 @@ pub trait Material {
 }
 
 pub struct Lambertian {
-    pub albedo: Arc<dyn Texture>,
+    pub albedo: Arc<dyn Texture + Send + Sync>,
 }
 
 impl Lambertian {
-    pub fn new_arc(a: Arc<dyn Texture>) -> Self {
+    pub fn new_arc(a: Arc<dyn Texture + Send + Sync>) -> Self {
         Self { albedo: a }
     }
 
@@ -115,11 +115,11 @@ impl Material for Dielectric {
 }
 
 pub struct DiffuseLight {
-    emit: Arc<dyn Texture>,
+    emit: Arc<dyn Texture + Send + Sync>,
 }
 
 impl DiffuseLight {
-    // pub fn new(a: Arc<dyn Texture>) -> Self {
+    // pub fn new(a: Arc<dyn Texture + Send + Sync>) -> Self {
     //     Self { emit: a }
     // }
 

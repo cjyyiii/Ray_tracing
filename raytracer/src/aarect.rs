@@ -8,7 +8,7 @@ use crate::{
 use std::sync::Arc;
 
 pub struct XyRect {
-    mp: Arc<dyn Material>,
+    mp: Arc<dyn Material + Send + Sync>,
     x0: f64,
     x1: f64,
     y0: f64,
@@ -17,7 +17,14 @@ pub struct XyRect {
 }
 
 impl XyRect {
-    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mat: Arc<dyn Material>) -> Self {
+    pub fn new(
+        x0: f64,
+        x1: f64,
+        y0: f64,
+        y1: f64,
+        k: f64,
+        mat: Arc<dyn Material + Send + Sync>,
+    ) -> Self {
         Self {
             x0,
             x1,
@@ -64,7 +71,7 @@ impl Hittable for XyRect {
 }
 
 pub struct YzRect {
-    mp: Arc<dyn Material>,
+    mp: Arc<dyn Material + Send + Sync>,
     y0: f64,
     y1: f64,
     z0: f64,
@@ -73,7 +80,14 @@ pub struct YzRect {
 }
 
 impl YzRect {
-    pub fn new(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, mat: Arc<dyn Material>) -> Self {
+    pub fn new(
+        y0: f64,
+        y1: f64,
+        z0: f64,
+        z1: f64,
+        k: f64,
+        mat: Arc<dyn Material + Send + Sync>,
+    ) -> Self {
         Self {
             y0,
             y1,
@@ -120,7 +134,7 @@ impl Hittable for YzRect {
 }
 
 pub struct XzRect {
-    mp: Arc<dyn Material>,
+    mp: Arc<dyn Material + Send + Sync>,
     x0: f64,
     x1: f64,
     z0: f64,
@@ -129,7 +143,14 @@ pub struct XzRect {
 }
 
 impl XzRect {
-    pub fn new(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, mat: Arc<dyn Material>) -> Self {
+    pub fn new(
+        x0: f64,
+        x1: f64,
+        z0: f64,
+        z1: f64,
+        k: f64,
+        mat: Arc<dyn Material + Send + Sync>,
+    ) -> Self {
         Self {
             x0,
             x1,

@@ -13,13 +13,13 @@ use crate::{
 };
 
 pub struct ConstantMediun {
-    pub boundary: Arc<dyn Hittable>,
-    pub phase_function: Arc<dyn Material>,
+    pub boundary: Arc<dyn Hittable + Send + Sync>,
+    pub phase_function: Arc<dyn Material + Send + Sync>,
     pub neg_inv_density: f64,
 }
 
 impl ConstantMediun {
-    // pub fn new(b: Arc<dyn Hittable>, d: f64, a: Arc<dyn Texture>) -> Self {
+    // pub fn new(b: Arc<dyn Hittable + Send + Sync>, d: f64, a: Arc<dyn Texture + Send + Sync>) -> Self {
     //     Self {
     //         boundary: b,
     //         phase_function: Arc::new(Iostropic::new(a)),
@@ -27,7 +27,7 @@ impl ConstantMediun {
     //     }
     // }
 
-    pub fn new_col(b: Arc<dyn Hittable>, d: f64, c: Vec3) -> Self {
+    pub fn new_col(b: Arc<dyn Hittable + Send + Sync>, d: f64, c: Vec3) -> Self {
         Self {
             boundary: b,
             phase_function: Arc::new(Iostropic::new_col(c)),
@@ -109,7 +109,7 @@ impl Hittable for ConstantMediun {
 }
 
 pub struct Iostropic {
-    pub albedo: Arc<dyn Texture>,
+    pub albedo: Arc<dyn Texture + Send + Sync>,
 }
 
 impl Iostropic {
@@ -119,7 +119,7 @@ impl Iostropic {
         }
     }
 
-    // pub fn new(a: Arc<dyn Texture>) -> Self {
+    // pub fn new(a: Arc<dyn Texture + Send + Sync>) -> Self {
     //     Self { albedo: a }
     // }
 }
