@@ -17,16 +17,16 @@ mod vec3;
 use crate::material::{Dielectric, Lambertian, Metal};
 use crate::vec3::{Color, Point3, Vec3};
 use aarect::{XyRect, XzRect, YzRect};
+use bbox::Box_;
 use bvh::BVHNode;
 use camera::Camera;
 use color::write_color;
 use constant_medium::ConstantMediun;
 use hittable::{Hittable, RotateY, Translate};
 use hittable_list::HittableList;
-use image::{ImageBuffer};
+use image::ImageBuffer;
 use indicatif::ProgressBar;
 use material::DiffuseLight;
-use bbox::Box_;
 use rand::Rng;
 pub use ray::Ray;
 use sphere::{MovingSphere, Sphere};
@@ -544,8 +544,8 @@ fn main() {
         let world = world.clone();
         let img = img.clone();
         let bar = bar.clone();
-        let background_ = background.clone();
-        let cam_ = cam.clone();
+        let background_ = background;
+        let cam_ = cam;
 
         let handle = thread::spawn(move || {
             for j in (k * width / thread_num)..((k + 1) * width / thread_num) {
