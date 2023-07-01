@@ -1,6 +1,6 @@
 mod aabb;
 mod aarect;
-mod r#box;
+mod bbox;
 mod bvh;
 mod camera;
 mod color;
@@ -26,7 +26,7 @@ use hittable_list::HittableList;
 use image::{ImageBuffer};
 use indicatif::ProgressBar;
 use material::DiffuseLight;
-use r#box::Box_;
+use bbox::Box_;
 use rand::Rng;
 pub use ray::Ray;
 use sphere::{MovingSphere, Sphere};
