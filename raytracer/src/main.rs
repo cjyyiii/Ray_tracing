@@ -165,8 +165,8 @@ fn two_perlin_spheres() -> HittableList {
 
 fn earth_scene() -> HittableList {
     let mut world: HittableList = HittableList::new();
-    let earth_texture = Arc::new(ImageTexture::new("earthmap.jpg"));
-    let earth_surface = Lambertian::new_arc(earth_texture);
+    let earth_texture: Arc<ImageTexture> = Arc::new(ImageTexture::new("earthmap.jpg"));
+    let earth_surface: Lambertian = Lambertian::new_arc(earth_texture);
     world.add(Arc::new(Sphere::new(
         Point3::new(0.0, 0.0, 0.0),
         2.0,
@@ -313,7 +313,7 @@ fn final_scene() -> HittableList {
                 let z0 = -1000.0 + j as f64 * w;
                 let y0 = 0.0;
                 let x1 = x0 + w;
-                let y1 = rng.gen_range(0.0..101.0);
+                let y1 = rng.gen_range(1.0..101.0);
                 let z1 = z0 + w;
 
                 boxes1.add(Arc::new(Box_::new(
@@ -455,20 +455,11 @@ fn main() {
             vfov = 20.0;
         }
         4 => {
-            // world_scene = earth_scene();
-            // background = Color::new(0.70, 0.80, 1.00);
-            // lookfrom = Point3::new(13.0, 2.0, 3.0);
-            // lookat = Point3::new(0.0, 0.0, 0.0);
-            // vfov = 20.0;
-            world_scene = final_scene();
-            aspect_ratio = 1.0;
-            width = 400; //800
-            height = 400; //800
-            samples_per_pixel = 100; //10000
-            background = Color::new(0.0, 0.0, 0.0);
-            lookfrom = Point3::new(478.0, 278.0, -600.0);
-            lookat = Point3::new(278.0, 278.0, 0.0);
-            vfov = 40.0;
+            world_scene = earth_scene();
+            background = Color::new(0.70, 0.80, 1.00);
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
         }
         5 => {
             world_scene = simple_light();
@@ -501,20 +492,15 @@ fn main() {
             vfov = 40.0;
         }
         _ => {
-            world_scene = earth_scene();
-            background = Color::new(0.70, 0.80, 1.00);
-            lookfrom = Point3::new(13.0, 2.0, 3.0);
-            lookat = Point3::new(0.0, 0.0, 0.0);
-            vfov = 20.0;
-            // world_scene = final_scene();
-            // aspect_ratio = 1.0;
-            // width = 800;
-            // height = 800;
-            // samples_per_pixel = 100; //10000
-            // background = Color::new(0.0, 0.0, 0.0);
-            // lookfrom = Point3::new(478.0, 278.0, -600.0);
-            // lookat = Point3::new(278.0, 278.0, 0.0);
-            // vfov = 40.0;
+            world_scene = final_scene();
+            aspect_ratio = 1.0;
+            width = 800; //800
+            height = 800; //800
+            samples_per_pixel = 10000; //10000
+            background = Color::new(0.0, 0.0, 0.0);
+            lookfrom = Point3::new(478.0, 278.0, -600.0);
+            lookat = Point3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
         }
     }
 
