@@ -33,6 +33,7 @@ use sphere::{MovingSphere, Sphere};
 use std::fs::File;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Instant;
 use texture::{CheckerTexture, ImageTexture, NoiseTexture};
 
 const AUTHOR: &str = "程婧祎";
@@ -410,6 +411,8 @@ fn final_scene() -> HittableList {
     world
 }
 fn main() {
+    let now = Instant::now();
+
     // get environment variable CI, which is true for GitHub Actions
     let is_ci: bool = is_ci();
 
@@ -538,7 +541,8 @@ fn main() {
     // let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
 
     let mut handles = vec![];
-    let thread_num = 31;
+    let thread_num = 63;
+    println!("使用{}条线程渲染", thread_num);
 
     for k in 0..thread_num {
         let world = world.clone();
@@ -606,6 +610,8 @@ fn main() {
         Ok(_) => {}
         Err(_) => println!("Outputting image fails."),
     }
+    let end = now.elapsed().as_secs();
+    println!("程序运行了 {} 秒", end);
 }
 
 fn ray_color(r: Ray, background: Color, world: &dyn Hittable, depth: i32) -> Color {
