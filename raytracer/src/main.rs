@@ -497,7 +497,7 @@ fn main() {
             aspect_ratio = 1.0;
             width = 800; //800
             height = 800; //800
-            samples_per_pixel = 10000; //10000
+            samples_per_pixel = 5000; //10000
             background = Color::new(0.0, 0.0, 0.0);
             lookfrom = Point3::new(478.0, 278.0, -600.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
