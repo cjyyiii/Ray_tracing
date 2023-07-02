@@ -500,7 +500,7 @@ fn main() {
             aspect_ratio = 1.0;
             width = 800; //800
             height = 800; //800
-            samples_per_pixel = 3000; //10000
+            samples_per_pixel = 5000; //10000
             background = Color::new(0.0, 0.0, 0.0);
             lookfrom = Point3::new(478.0, 278.0, -600.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
@@ -541,7 +541,7 @@ fn main() {
     // let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
 
     let mut handles = vec![];
-    let thread_num = 31;
+    let thread_num = 20;
     println!("使用{}条线程渲染", thread_num);
 
     for k in 0..thread_num {
